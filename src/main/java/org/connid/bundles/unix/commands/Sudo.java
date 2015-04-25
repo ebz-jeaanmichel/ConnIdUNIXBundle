@@ -36,7 +36,7 @@ public class Sudo {
      * overridden in sudoers).
      *
      */
-    private static final String SUDO_COMMAND = "sudo";
+    private static final String SUDO_COMMAND = "sudo ";
     /**
      * When used by itself, the -k (kill) option to sudo invalidates the user’s
      * timestamp by setting the time on it to the Epoch. The next time sudo is

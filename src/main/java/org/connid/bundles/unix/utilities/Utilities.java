@@ -20,8 +20,12 @@ import org.identityconnectors.common.security.GuardedString;
 public class Utilities {
 
     public static String getPlainPassword(final GuardedString password) {
-        final StringBuilder builder = new StringBuilder();
-
+    	if (password == null){
+    		return null;
+    	}
+    	
+    	final StringBuilder builder = new StringBuilder();
+        
         password.access(new GuardedString.Accessor() {
 
             @Override

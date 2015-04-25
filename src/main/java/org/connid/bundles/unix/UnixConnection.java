@@ -19,14 +19,19 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
+
 import org.connid.bundles.unix.utilities.Constants;
 import org.connid.bundles.unix.utilities.DefaultProperties;
 import org.connid.bundles.unix.utilities.Utilities;
+import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 public class UnixConnection {
 
@@ -74,7 +79,7 @@ public class UnixConnection {
     public String execute(final String command) throws JSchException, IOException {
         if (!session.isConnected()) {
             initSession(unixConfiguration);
-            session.connect(DefaultProperties.SSH_SOCKET_TIMEOUT);
+            session.connect(5000);
         }
         if (execChannel == null || !execChannel.isConnected()) {
             execChannel = (ChannelExec) session.openChannel("exec");
@@ -82,7 +87,7 @@ public class UnixConnection {
         }
         LOG.info("Command to execute: " + command);
         execChannel.setCommand(command);
-        execChannel.connect(DefaultProperties.SSH_SOCKET_TIMEOUT);
+        execChannel.connect(5000);
         return readOutput();
     }
 
@@ -93,6 +98,11 @@ public class UnixConnection {
         StringBuilder buffer = new StringBuilder();
         while ((line = br.readLine()) != null) {
             buffer.append(line).append("\n");
+        }
+        InputStream error = execChannel.getErrStream();
+        if (error != null){
+        	byte[] errorMessage = IOUtil.readInputStreamBytes(error, true);
+        	throw new ConnectorException(new String(errorMessage));
         }
         if (execChannel.isClosed()) {
             LOG.info("exit-status: " + execChannel.getExitStatus());
@@ -113,7 +123,7 @@ public class UnixConnection {
         if (!session.isConnected()) {
             initSession(unixConfiguration);
         }
-        session.connect(DefaultProperties.SSH_SOCKET_TIMEOUT);
+        session.connect(5000);
         session.sendKeepAliveMsg();
     }
 

@@ -112,6 +112,9 @@ public class UnixCreate {
 
             unixConnection.execute(UnixConnector.getCommandGenerator().
                     createUser(username, password, comment, shell, homeDirectory, status));
+            if (password != null){
+            	unixConnection.execute(UnixConnector.getCommandGenerator().setPassword(username, password));
+            }
             if (!status) {
                 unixConnection.execute(UnixConnector.getCommandGenerator().lockUser(username));
             }

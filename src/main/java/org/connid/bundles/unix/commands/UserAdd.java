@@ -86,8 +86,8 @@ public class UserAdd {
 
     private String createUserAddCommand() {
         StringBuilder useraddCommand = new StringBuilder(USERADD_COMMAND + " ");
-        useraddCommand.append(PASSWORD_OPTION).append(" $(perl -e 'print crypt(")
-                .append(password).append(", ").append(password).append(");') ");
+//        useraddCommand.append(PASSWORD_OPTION).append(" $(perl -e 'print crypt(")
+//                .append(password).append(", ").append(password).append(");') ");
         if (unixConfiguration.isCreateHomeDirectory()) {
             useraddCommand.append(CREATE_HOME_DIR_OPTION + " ");
         }

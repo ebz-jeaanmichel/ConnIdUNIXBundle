@@ -22,6 +22,8 @@ public class Passwd {
      *
      */
     private static final String PASSWD_COMMAND = "passwd";
+    
+    private static final String CHPASSWD_COMMAND = "chpasswd";
     /**
      * This option is used to indicate that passwd should read the new password
      * from standard input, which can be a pipe.
@@ -45,8 +47,7 @@ public class Passwd {
 
     private String createChangeUserPasswordCommand(final String username,
             final String password) {
-        return "echo " + password + " | " + PASSWD_COMMAND + " " + username
-                + " " + READ_PASSWORD_FROM_STDIN;
+        return "echo " + username + ":" + password + " | " + CHPASSWD_COMMAND;
     }
 
     public String setPassword(final String username,
