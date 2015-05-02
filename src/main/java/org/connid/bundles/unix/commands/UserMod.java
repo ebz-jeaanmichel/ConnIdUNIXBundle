@@ -90,11 +90,11 @@ public class UserMod {
             final String newUsername, final String password, final String comment, final String shell,
             final String homeDirectory) {
         StringBuilder usermodCommand = new StringBuilder(USERMOD_COMMAND + " ");
-        if ((StringUtil.isNotBlank(password))
-                && (StringUtil.isNotEmpty(password))) {
-            usermodCommand.append(PASSWORD_OPTION).append(" $(perl -e 'print crypt(")
-                    .append(password).append(", ").append(password).append(");') ");
-        }
+//        if ((StringUtil.isNotBlank(password))
+//                && (StringUtil.isNotEmpty(password))) {
+//            usermodCommand.append(PASSWORD_OPTION).append(" $(perl -e 'print crypt(")
+//                    .append(password).append(", ").append(password).append(");') ");
+//        }
         if ((StringUtil.isNotBlank(newUsername))
                 && (StringUtil.isNotEmpty(newUsername))) {
             usermodCommand.append(CHANGE_LOGIN_OPTION).append(

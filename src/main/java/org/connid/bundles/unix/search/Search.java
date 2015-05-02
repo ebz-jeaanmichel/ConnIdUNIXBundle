@@ -16,15 +16,18 @@
 package org.connid.bundles.unix.search;
 
 import com.jcraft.jsch.JSchException;
+
 import java.io.IOException;
 import java.net.ConnectException;
 import java.util.Iterator;
 import java.util.List;
+
 import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.files.PasswdFile;
 import org.connid.bundles.unix.files.PasswdRow;
+import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
@@ -130,14 +133,13 @@ public class Search {
                 bld.setUid("_W_R_O_N_G_");
                 bld.setName("_W_R_O_N_G_");
             }
-            bld.addAttribute(AttributeBuilder.build(
-                    unixConfiguration.getCommentAttribute(),
+            bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.COMMENT.getName(),
                     CollectionUtil.newSet(passwdRow.getComment())));
             bld.addAttribute(AttributeBuilder.build(
-                    unixConfiguration.getShellAttribute(),
+                    SchemaAccountAttribute.SHEL.getName(),
                     CollectionUtil.newSet(passwdRow.getShell())));
             bld.addAttribute(AttributeBuilder.build(
-                    unixConfiguration.getHomeDirectoryAttribute(),
+                    SchemaAccountAttribute.HOME.getName(),
                     CollectionUtil.newSet(passwdRow.getHomeDirectory())));
             if (filter.isUid()) {
                 bld.addAttribute(OperationalAttributes.ENABLE_NAME,

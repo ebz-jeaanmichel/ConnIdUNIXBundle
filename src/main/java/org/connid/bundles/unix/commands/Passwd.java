@@ -47,7 +47,9 @@ public class Passwd {
 
     private String createChangeUserPasswordCommand(final String username,
             final String password) {
-        return "echo " + username + ":" + password + " | " + CHPASSWD_COMMAND;
+    	StringBuilder passwordCommand = new StringBuilder();
+    	passwordCommand.append(PASSWD_COMMAND).append(" ").append(username);
+        return passwordCommand.toString();
     }
 
     public String setPassword(final String username,

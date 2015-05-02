@@ -15,8 +15,15 @@
  */
 package org.connid.bundles.unix.commands;
 
+import java.util.List;
+import java.util.Set;
+
 import org.connid.bundles.unix.UnixConfiguration;
+import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.Name;
 
 public class UserAdd {
 
@@ -40,13 +47,13 @@ public class UserAdd {
      * not specified, useradd will use the base directory specified by the HOME variable in /etc/default/useradd, or
      * /home by default.
      */
-    private static final String BASE_HOME_DIR_OPTION = "-b";
+//    private static final String BASE_HOME_DIR_OPTION = "-b";
 
     /**
      * The name of the user's login shell. The default is to leave this field blank, which causes the system to select
      * the default login shell specified by the SHELL variable in /etc/default/useradd, or an empty string by default.
      */
-    private static final String SHELL_OPTION = "-s";
+//    private static final String SHELL_OPTION = "-s";
 
     /**
      * Any text string. It is generally a short description of the login, and is currently used as the field for the
@@ -59,63 +66,118 @@ public class UserAdd {
      * should make sure the password respects the system's password policy.
      *
      */
-    private static final String PASSWORD_OPTION = "-p";
-
-    private static final String COMMENT = "-c";
-
+//    private static final String PASSWORD_OPTION = "-p";
+//
+//    private static final String COMMENT = "-c";
+//
     private String username = "";
+//
+//    private String password = "";
+//
+//    private String comment = "";
+//
+//    private String shell = "";
+//
+//    private String homeDirectory = "";
+    
+    private Set<Attribute> attributes = null;
 
-    private String password = "";
-
-    private String comment = "";
-
-    private String shell = "";
-
-    private String homeDirectory = "";
-
-    public UserAdd(final UnixConfiguration configuration,
-            final String username, final String password, final String comment,
-            final String shell, final String homeDirectory) {
+//    public UserAdd(final UnixConfiguration configuration,
+//            final String username, final String password, final String comment,
+//            final String shell, final String homeDirectory) {
+//        unixConfiguration = configuration;
+//        this.username = username;
+//        this.password = password;
+//        this.comment = comment;
+//        this.shell = shell;
+//        this.homeDirectory = homeDirectory;
+//    }
+    
+    public UserAdd(final UnixConfiguration configuration, String username, Set<Attribute> attributes) {
         unixConfiguration = configuration;
         this.username = username;
-        this.password = password;
-        this.comment = comment;
-        this.shell = shell;
-        this.homeDirectory = homeDirectory;
+        this.attributes = attributes;
     }
 
     private String createUserAddCommand() {
         StringBuilder useraddCommand = new StringBuilder(USERADD_COMMAND + " ");
 //        useraddCommand.append(PASSWORD_OPTION).append(" $(perl -e 'print crypt(")
 //                .append(password).append(", ").append(password).append(");') ");
+        
+        for (Attribute attr : attributes){
+        	if (attr.is(Name.NAME)){
+        		continue;
+        	}
+        	
+        	SchemaAccountAttribute accountAttr = SchemaAccountAttribute.findAttribute(attr.getName());
+        	if (accountAttr == null){
+        		continue;
+        	}
+        	if (!checkOccurence(accountAttr, attr.getValue())){
+        		throw new IllegalArgumentException("Attempt to add multi value attribute to the single valued attribute " + attr.getName());
+        	}
+        	
+        	if (attr.getValue() == null || attr.getValue().isEmpty()){
+        		continue;
+        	}
+        	
+        	for (Object value : attr.getValue()){
+        		if (Boolean.class.isAssignableFrom(accountAttr.getType())){
+            		if (((Boolean) value)){
+            			useraddCommand.append(accountAttr.getCommand()).append(" ");
+            		}
+            	} else {
+            		useraddCommand.append(accountAttr.getCommand()).append(" ");
+            		useraddCommand.append(value).append(" ");
+            	}
+        	}
+        	
+        }
         if (unixConfiguration.isCreateHomeDirectory()) {
-            useraddCommand.append(CREATE_HOME_DIR_OPTION + " ");
+            useraddCommand.append(CREATE_HOME_DIR_OPTION).append(" ");
         }
-        useraddCommand.append(BASE_HOME_DIR_OPTION).append(" ");
-        if (StringUtil.isNotEmpty(homeDirectory)
-                && StringUtil.isNotBlank(homeDirectory)) {
-            useraddCommand.append(homeDirectory).append(" ");
-        } else {
-            useraddCommand.append(
-                    unixConfiguration.getBaseHomeDirectory()).append(" ");
-        }
-        useraddCommand.append(SHELL_OPTION).append(" ");
-        if (StringUtil.isNotEmpty(shell)
-                && StringUtil.isNotBlank(shell)) {
-            useraddCommand.append(shell).append(" ");
-        } else {
-            useraddCommand.append(
-                    unixConfiguration.getShell()).append(" ");
-        }
-        if ((StringUtil.isNotBlank(comment))
-                && (StringUtil.isNotEmpty(comment))) {
-            useraddCommand.append(COMMENT + " ").append(comment).append(" ");
-        }
+//        useraddCommand.append(BASE_HOME_DIR_OPTION).append(" ");
+//        if (StringUtil.isNotEmpty(homeDirectory)
+//                && StringUtil.isNotBlank(homeDirectory)) {
+//            useraddCommand.append(homeDirectory).append(" ");
+//        } else {
+//            useraddCommand.append(
+//                    unixConfiguration.getBaseHomeDirectory()).append(" ");
+//        }
+//        useraddCommand.append(SHELL_OPTION).append(" ");
+//        if (StringUtil.isNotEmpty(shell)
+//                && StringUtil.isNotBlank(shell)) {
+//            useraddCommand.append(shell).append(" ");
+//        } else {
+//            useraddCommand.append(
+//                    unixConfiguration.getShell()).append(" ");
+//        }
+//        if ((StringUtil.isNotBlank(comment))
+//                && (StringUtil.isNotEmpty(comment))) {
+//            useraddCommand.append(COMMENT + " ").append(comment).append(" ");
+//        }
         useraddCommand.append(username);
         return useraddCommand.toString();
     }
 
-    public String useradd() {
+    private boolean checkOccurence(SchemaAccountAttribute accountAttr,
+			List<Object> values) {
+		
+    	Integer occurence = accountAttr.getOccurence();
+    	
+    	if (occurence == 1){
+    		if (values != null && !values.isEmpty()){
+    			return values.size() == 1;
+    		}
+    	}
+    	
+    	return true;
+    	
+	}
+
+	public String useradd() {
         return createUserAddCommand();
     }
+    
+ 
 }

@@ -69,9 +69,11 @@ public class Sudo {
     }
 
     private String createSudoCommand() {
-        return SUDO_COMMAND + " " + INVALIDATE_TIMESTAMP_OPTION + "; echo "
-                + sudoPassword + " | " + SUDO_COMMAND + " " + VALIDATE_OPTION
-                + " " + READ_PASSWORD_FROM_STDIN_OPTION + "; " + SUDO_COMMAND;
+    	return SUDO_COMMAND;
+    	
+//        return SUDO_COMMAND + " " + INVALIDATE_TIMESTAMP_OPTION + "; echo "
+//                + sudoPassword + " | " + SUDO_COMMAND + " " + VALIDATE_OPTION
+//                + " " + READ_PASSWORD_FROM_STDIN_OPTION + "; " + SUDO_COMMAND;
     }
 
     public String sudo() {

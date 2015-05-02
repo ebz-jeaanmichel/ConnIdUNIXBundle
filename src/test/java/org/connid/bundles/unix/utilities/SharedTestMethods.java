@@ -33,15 +33,16 @@ public class SharedTestMethods {
                 new GuardedString(UnixProperties.UNIX_PASSWORD.toCharArray()));
         config.setHostname(UnixProperties.UNIX_HOSTNAME);
         config.setPort(Integer.valueOf(UnixProperties.UNIX_PORT).intValue());
-        config.setBaseHomeDirectory(UnixProperties.UNIX_BASE_HOME_DIRECTORY);
+//        config.setBaseHomeDirectory(UnixProperties.UNIX_BASE_HOME_DIRECTORY);
         config.setShell(UnixProperties.UNIX_USER_SHELL);
         config.setCreateHomeDirectory(true);
         config.setDeleteHomeDirectory(true);
-        config.setRoot(true);
-        config.setSudoPassword(null);
-        config.setCommentAttribute("comment");
-        config.setShellAttribute("shell");
-        config.setHomeDirectoryAttribute("homeDir");
+        config.setRoot(UnixProperties.UNIX_USER_ROOT);
+        config.setSudoPassword(new GuardedString(UnixProperties.UNIX_PASSWORD.toCharArray()));
+        config.setSshConnectionTimeout(50000);
+//        config.setCommentAttribute("comment");
+//        config.setShellAttribute("shell");
+//        config.setHomeDirectoryAttribute("homeDir");
         return config;
     }
 
@@ -59,7 +60,9 @@ public class SharedTestMethods {
         attributes.add(AttributeBuilder.build("comment", CollectionUtil.newSet(
                 attrs.getUsername())));
         attributes.add(AttributeBuilder.build("shell", CollectionUtil.newSet(
-                "/bin/rbash")));
+                "/bin/bash")));
+        attributes.add(AttributeBuilder.build("homeDir", CollectionUtil.newSet(
+                "/home/"+attrs.getUsername())));
         attributes.add(name);
         return attributes;
     }

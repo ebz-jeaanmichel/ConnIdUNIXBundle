@@ -30,8 +30,8 @@ public class DefaultProperties {
         ResourceBundle defaultProperties = ResourceBundle.getBundle("default");
 
         UNIX_SHELL = defaultProperties.getString("unix.user.shell");
-        SSH_SOCKET_TIMEOUT = Integer.valueOf(
-                defaultProperties.getString("ssh.socket.timeout")).intValue();
+//        SSH_SOCKET_TIMEOUT = Integer.valueOf(
+//                defaultProperties.getString("ssh.socket.timeout")).intValue();
         UNIX_USER_HOMEDIRECTORY =
                 defaultProperties.getString("unix.user.homedirectory");
         COMMENT_ATTRIBUTE = defaultProperties.getString("comment.attribute");

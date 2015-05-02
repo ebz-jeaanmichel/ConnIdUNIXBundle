@@ -18,6 +18,7 @@ package org.connid.bundles.unix.sshmanagement;
 import com.jcraft.jsch.JSchException;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.commands.DelUser;
@@ -30,6 +31,7 @@ import org.connid.bundles.unix.commands.Sed;
 import org.connid.bundles.unix.commands.Sudo;
 import org.connid.bundles.unix.commands.UserAdd;
 import org.connid.bundles.unix.commands.UserMod;
+import org.identityconnectors.framework.common.objects.Attribute;
 
 public class CommandGenerator {
 
@@ -43,7 +45,7 @@ public class CommandGenerator {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-            commandToExecute.append(sudoCommand.sudo()).append("; ");
+            commandToExecute.append(sudoCommand.sudo());
         }
         commandToExecute.append(General.searchUserIntoPasswdFile(username)).toString();
 
@@ -56,7 +58,7 @@ public class CommandGenerator {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        return commandToExecute.append(General.catPasswdFile()).toString();
+        return commandToExecute.append(General.getentPasswdFile()).toString();
     }
 
     public String groupExists(final String groupname) {
@@ -78,15 +80,25 @@ public class CommandGenerator {
         return commandToExecute.append(General.searchUserStatusIntoShadowFile(username)).toString();
     }
 
-    public String createUser(final String username, final String password,
-            final String comment, final String shell,
-            final String homeDirectory, final boolean status) {
+//    public String createUser(final String username, final String password,
+//            final String comment, final String shell,
+//            final String homeDirectory, final boolean status) {
+//        StringBuilder commandToExecute = new StringBuilder();
+//        if (!unixConfiguration.isRoot()) {
+//            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+//            commandToExecute.append(sudoCommand.sudo());
+//        }
+//        commandToExecute.append(createUserAddCommand(username, password, comment, shell, homeDirectory));
+//        return commandToExecute.toString();
+//    }
+    
+    public String createUser(String username, Set<Attribute> attributes) {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        commandToExecute.append(createUserAddCommand(username, password, comment, shell, homeDirectory));
+        commandToExecute.append(createUserAddCommand(username, attributes));
         return commandToExecute.toString();
     }
     
@@ -103,26 +115,24 @@ public class CommandGenerator {
     
 
     public String deleteUser(final String username) {
-//        DelUser userDelCommand =
-//                new DelUser(unixConfiguration, username);
+        DelUser userDelCommand =
+                new DelUser(unixConfiguration, username);
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-//        commandToExecute.append(userDelCommand.deluser());
+        commandToExecute.append(userDelCommand.deluser());
 //        return commandToExecute.toString();
-        Sed sedCommand = new Sed(username);
-        commandToExecute.append(sedCommand.sedCommand("/etc/shadow") + " && " + sedCommand.sedCommand("/etc/passwd") + " && "
-                + sedCommand.sedCommand("/etc/group") + " &&" + "rm -rf " + unixConfiguration.
-                getBaseHomeDirectory() + "/" + username);
+//        Sed sedCommand = new Sed(username);
+//        commandToExecute.append(sedCommand.sedCommand("/etc/shadow") + " && " + sedCommand.sedCommand("/etc/passwd") + " && "
+//                + sedCommand.sedCommand("/etc/group") + " &&" + "rm -rf " + unixConfiguration.
+//                getBaseHomeDirectory() + "/" + username);
         return commandToExecute.toString();
     }
 
-    private String createUserAddCommand(final String username,
-            final String password, final String comment, final String shell,
-            final String homeDirectory) {
-        UserAdd userAddCommand = new UserAdd(unixConfiguration, username, password, comment, shell, homeDirectory);
+    private String createUserAddCommand(String username, Set<Attribute> attributes) {
+        UserAdd userAddCommand = new UserAdd(unixConfiguration, username, attributes);
         StringBuilder commandToExecute = new StringBuilder();
 //        if (!unixConfiguration.isRoot()) {
 //            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());

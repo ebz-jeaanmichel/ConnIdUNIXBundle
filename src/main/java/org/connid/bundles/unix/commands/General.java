@@ -17,19 +17,20 @@ package org.connid.bundles.unix.commands;
 
 public class General {
 
-    public static String catPasswdFile() {
-        return "cat /etc/passwd";
+    public static String getentPasswdFile() {
+        return "getent passwd";
     }
 
     public static String searchUserIntoPasswdFile(final String username) {
-        return "cat /etc/passwd | grep " + username;
+        return "getent passwd | grep " + username;
     }
 
     public static String searchGroupIntoGroupFile(String groupname) {
-        return "cat /etc/group | grep " + groupname;
+        return "getent group | grep " + groupname;
     }
 
+    //shadow
     public static String searchUserStatusIntoShadowFile(final String username) {
-        return "cat /etc/shadow | grep " + username;
+        return "getent shadow | grep " + username;
     }
 }

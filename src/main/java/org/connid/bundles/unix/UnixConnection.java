@@ -16,6 +16,7 @@
 package org.connid.bundles.unix;
 
 import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -24,12 +25,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.StringReader;
 
 import org.connid.bundles.unix.utilities.Constants;
 import org.connid.bundles.unix.utilities.DefaultProperties;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.IOUtil;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
@@ -79,7 +84,7 @@ public class UnixConnection {
     public String execute(final String command) throws JSchException, IOException {
         if (!session.isConnected()) {
             initSession(unixConfiguration);
-            session.connect(5000);
+            session.connect(unixConfiguration.getSshConnectionTimeout());
         }
         if (execChannel == null || !execChannel.isConnected()) {
             execChannel = (ChannelExec) session.openChannel("exec");
@@ -87,27 +92,80 @@ public class UnixConnection {
         }
         LOG.info("Command to execute: " + command);
         execChannel.setCommand(command);
-        execChannel.connect(5000);
+        execChannel.connect(unixConfiguration.getSshConnectionTimeout());
+        sleep(1000);
+        LOG.info("Reading output");
         return readOutput();
     }
+    
+    public String execute(final String command, final String password) throws JSchException, IOException {
+        if (!session.isConnected()) {
+            initSession(unixConfiguration);
+            session.connect(unixConfiguration.getSshConnectionTimeout());
+        }
+        if (execChannel == null || !execChannel.isConnected()) {
+            execChannel = (ChannelExec) session.openChannel("exec");
+//            fromServer = execChannel.getInputStream();
+        }
+        ChannelShell shellChannel = (ChannelShell) session.openChannel("shell");
+        LOG.info("Command to execute: " + command);
+        execChannel.setCommand(command);
+        execChannel.setPty(true);
+        execChannel.connect();
+        OutputStream out = execChannel.getOutputStream();
+        LOG.info("Reading output");
+        if (StringUtil.isNotBlank(password)){
+        	sleep(1500);
+//        	PipedOutputStream pout = new PipedOutputStream();
+//        	PipedInputStream in = new PipedInputStream(pout);
+//        	execChannel.setInputStream(in);
+        	
+        	out.write((password+"\n").getBytes());
+        	out.flush();
+        	sleep(1500);
+//        	execChannel.connect(5000);
+        	out.write((password+"\n").getBytes());
+        	out.flush();
+        	sleep(1500);
+        	
+        }
+        
+        return readOutput(true);
+    }
 
-    private String readOutput() throws IOException {
+    private String readOutput(boolean skipInput) throws IOException {
         String line;
-        BufferedReader br = new BufferedReader(
-                new InputStreamReader(fromServer));
-        StringBuilder buffer = new StringBuilder();
-        while ((line = br.readLine()) != null) {
-            buffer.append(line).append("\n");
-        }
-        InputStream error = execChannel.getErrStream();
-        if (error != null){
-        	byte[] errorMessage = IOUtil.readInputStreamBytes(error, true);
-        	throw new ConnectorException(new String(errorMessage));
-        }
+       
         if (execChannel.isClosed()) {
             LOG.info("exit-status: " + execChannel.getExitStatus());
         }
         sleep(1000);
+//        LOG.info("buffer ", buffer.toString());
+        return String.valueOf(execChannel.getExitStatus());
+    }
+
+    
+    private String readOutput() throws IOException {
+        String line;
+       
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader(fromServer));
+        StringBuilder buffer = new StringBuilder();
+        if (fromServer.available() > 0){
+        while ((line = br.readLine()) != null) {
+            buffer.append(line).append("\n");
+        }
+    }
+//        InputStream error = execChannel.getErrStream();
+//        if (error != null){
+//        	byte[] errorMessage = IOUtil.readInputStreamBytes(error, true);
+//        	throw new ConnectorException(new String(errorMessage));
+//        }
+        if (execChannel.isClosed()) {
+            LOG.info("exit-status: " + execChannel.getExitStatus());
+        }
+        sleep(1000);
+        LOG.info("buffer ", buffer.toString());
         return buffer.toString();
     }
 
@@ -123,7 +181,7 @@ public class UnixConnection {
         if (!session.isConnected()) {
             initSession(unixConfiguration);
         }
-        session.connect(5000);
+        session.connect(unixConfiguration.getSshConnectionTimeout());
         session.sendKeepAliveMsg();
     }
 
@@ -131,7 +189,7 @@ public class UnixConnection {
         session = jSch.getSession(username, unixConfiguration.getHostname(), unixConfiguration.getPort());
         session.setPassword(password);
         session.setConfig("StrictHostKeyChecking", "no");
-        session.connect(DefaultProperties.SSH_SOCKET_TIMEOUT);
+        session.connect(unixConfiguration.getSshConnectionTimeout());
         session.disconnect();
     }
 

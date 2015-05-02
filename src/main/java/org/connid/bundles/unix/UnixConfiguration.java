@@ -37,7 +37,7 @@ public class UnixConfiguration extends AbstractConfiguration {
 
     private boolean deleteHomeDirectory = false;
 
-    private String baseHomeDirectory = "";
+//    private String baseHomeDirectory = "";
 
     private String shell = "";
 
@@ -45,12 +45,15 @@ public class UnixConfiguration extends AbstractConfiguration {
 
     private GuardedString sudoPassword = null;
 
-    private String commentAttribute = "";
+//    private String commentAttribute = "";
 
-    private String shellAttribute = "";
+//    private String shellAttribute = "";
 
-    private String homeDirectoryAttribute = "";
+//    private String homeDirectoryAttribute = "";
 
+    
+    private int sshConnectionTimeout = 5000; 
+    
     @ConfigurationProperty(displayMessageKey = "unix.admin.display",
     helpMessageKey = "unix.admin.help", order = 1)
     public final String getAdmin() {
@@ -113,15 +116,15 @@ public class UnixConfiguration extends AbstractConfiguration {
         this.deleteHomeDirectory = deleteHomeDirectory;
     }
 
-    @ConfigurationProperty(displayMessageKey = "unix.basehomedir.display",
-    helpMessageKey = "unix.basehomedir.help", order = 7)
-    public final String getBaseHomeDirectory() {
-        return baseHomeDirectory;
-    }
-
-    public final void setBaseHomeDirectory(final String baseHomeDirectory) {
-        this.baseHomeDirectory = baseHomeDirectory;
-    }
+//    @ConfigurationProperty(displayMessageKey = "unix.basehomedir.display",
+//    helpMessageKey = "unix.basehomedir.help", order = 7)
+//    public final String getBaseHomeDirectory() {
+//        return baseHomeDirectory;
+//    }
+//
+//    public final void setBaseHomeDirectory(final String baseHomeDirectory) {
+//        this.baseHomeDirectory = baseHomeDirectory;
+//    }
 
     @ConfigurationProperty(displayMessageKey = "unix.shell.display",
     helpMessageKey = "unix.shell.help", order = 8)
@@ -139,35 +142,35 @@ public class UnixConfiguration extends AbstractConfiguration {
         return root;
     }
 
-    @ConfigurationProperty(displayMessageKey = "unix.commentattr.display",
-    helpMessageKey = "unix.commentattr.help", order = 10)
-    public String getCommentAttribute() {
-        return commentAttribute;
-    }
+    @ConfigurationProperty(displayMessageKey = "unix.ssh.connection.timeout.display",
+    helpMessageKey = "unix.ssh.connection.timeout.help", order = 10)
+    public int getSshConnectionTimeout() {
+		return sshConnectionTimeout;
+	}
 
-    public void setCommentAttribute(String commentAttribute) {
-        this.commentAttribute = commentAttribute;
-    }
+    public void setSshConnectionTimeout(int sshConnectionTimeout) {
+		this.sshConnectionTimeout = sshConnectionTimeout;
+	}
 
-    @ConfigurationProperty(displayMessageKey = "unix.homedirattr.display",
-    helpMessageKey = "unix.homedirattr.help", order = 11)
-    public String getHomeDirectoryAttribute() {
-        return homeDirectoryAttribute;
-    }
-
-    public void setHomeDirectoryAttribute(String homeDirectoryAttribute) {
-        this.homeDirectoryAttribute = homeDirectoryAttribute;
-    }
-
-    @ConfigurationProperty(displayMessageKey = "unix.shellattr.display",
-    helpMessageKey = "unix.shellattr.help", order = 12)
-    public String getShellAttribute() {
-        return shellAttribute;
-    }
-
-    public void setShellAttribute(String shellAttribute) {
-        this.shellAttribute = shellAttribute;
-    }
+//    @ConfigurationProperty(displayMessageKey = "unix.homedirattr.display",
+//    helpMessageKey = "unix.homedirattr.help", order = 11)
+//    public String getHomeDirectoryAttribute() {
+//        return homeDirectoryAttribute;
+//    }
+//
+//    public void setHomeDirectoryAttribute(String homeDirectoryAttribute) {
+//        this.homeDirectoryAttribute = homeDirectoryAttribute;
+//    }
+//
+//    @ConfigurationProperty(displayMessageKey = "unix.shellattr.display",
+//    helpMessageKey = "unix.shellattr.help", order = 12)
+//    public String getShellAttribute() {
+//        return shellAttribute;
+//    }
+//
+//    public void setShellAttribute(String shellAttribute) {
+//        this.shellAttribute = shellAttribute;
+//    }
 
     public void setRoot(boolean root) {
         this.root = root;
@@ -200,9 +203,9 @@ public class UnixConfiguration extends AbstractConfiguration {
         if (port < 0 && port <= Constants.UNIX_LAST_PORT) {
             throw new ConfigurationException("Unix ssh port range: 0 - 65535");
         }
-        if (StringUtil.isBlank(baseHomeDirectory)) {
-            baseHomeDirectory = DefaultProperties.UNIX_USER_HOMEDIRECTORY;
-        }
+//        if (StringUtil.isBlank(baseHomeDirectory)) {
+//            baseHomeDirectory = DefaultProperties.UNIX_USER_HOMEDIRECTORY;
+//        }
         if (StringUtil.isBlank(
                 Boolean.valueOf(createHomeDirectory).toString())) {
             createHomeDirectory = false;
@@ -214,18 +217,18 @@ public class UnixConfiguration extends AbstractConfiguration {
         if (StringUtil.isBlank(shell)) {
             shell = DefaultProperties.UNIX_SHELL;
         }
-        if (StringUtil.isBlank(commentAttribute)) {
-            commentAttribute = DefaultProperties.COMMENT_ATTRIBUTE;
-
-        }
-        if (StringUtil.isBlank(shellAttribute)) {
-            shellAttribute = DefaultProperties.SHELL_ATTRIBUTE;
-
-        }
-        if (StringUtil.isBlank(homeDirectoryAttribute)) {
-            homeDirectoryAttribute = DefaultProperties.HOMEDIRECTORY_ATTRIBUTE;
-
-        }
+//        if (StringUtil.isBlank(commentAttribute)) {
+//            commentAttribute = DefaultProperties.COMMENT_ATTRIBUTE;
+//
+//        }
+//        if (StringUtil.isBlank(shellAttribute)) {
+//            shellAttribute = DefaultProperties.SHELL_ATTRIBUTE;
+//
+//        }
+//        if (StringUtil.isBlank(homeDirectoryAttribute)) {
+//            homeDirectoryAttribute = DefaultProperties.HOMEDIRECTORY_ATTRIBUTE;
+//
+//        }
         if ((!root) && (StringUtil.isBlank(sudoPassword.toString()))) {
             throw new ConfigurationException("Unix connector needs sudo password or root password");
         }

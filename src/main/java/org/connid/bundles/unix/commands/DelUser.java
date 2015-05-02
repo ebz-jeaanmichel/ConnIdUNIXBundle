@@ -43,6 +43,7 @@ public class DelUser {
             userdelCommand.append(DELETE_USER_DIR_OPTION).append(" ");
         }
         userdelCommand.append(username);
+        
         return userdelCommand.toString();
     }
     

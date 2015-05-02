@@ -16,8 +16,10 @@
 package org.connid.bundles.unix;
 
 import com.jcraft.jsch.JSchException;
+
 import java.io.IOException;
 import java.util.Set;
+
 import org.connid.bundles.unix.methods.UnixAuthenticate;
 import org.connid.bundles.unix.methods.UnixCreate;
 import org.connid.bundles.unix.methods.UnixDelete;
@@ -28,6 +30,8 @@ import org.connid.bundles.unix.search.Operand;
 import org.connid.bundles.unix.sshmanagement.CommandGenerator;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.api.operations.SchemaApiOp;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
@@ -38,7 +42,7 @@ import org.identityconnectors.framework.spi.operations.*;
 @ConnectorClass(configurationClass = UnixConfiguration.class,
 displayNameKey = "unix.connector.display")
 public class UnixConnector implements Connector, CreateOp, UpdateOp,
-        DeleteOp, TestOp, SearchOp<Operand>, AuthenticateOp {
+        DeleteOp, TestOp, SearchOp<Operand>, AuthenticateOp, SchemaOp {
 
     private static final Log LOG = Log.getLog(UnixConnector.class);
 
@@ -88,6 +92,9 @@ public class UnixConnector implements Connector, CreateOp, UpdateOp,
     public final Uid create(final ObjectClass oc, final Set<Attribute> set, final OperationOptions oo) {
         LOG.info("Create new user");
         Uid uidResult = null;
+        if (oc == null){
+        	throw new ConnectorException("Could not create object, no object class was specified.");
+        }
         try {
             uidResult = new UnixCreate(oc, unixConfiguration, set).create();
         } catch (IOException ex) {
@@ -156,4 +163,10 @@ public class UnixConnector implements Connector, CreateOp, UpdateOp,
         }
         return new UnixFilterTranslator();
     }
+
+	@Override
+	public Schema schema() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
