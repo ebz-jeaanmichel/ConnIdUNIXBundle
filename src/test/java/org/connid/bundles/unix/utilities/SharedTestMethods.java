@@ -16,14 +16,21 @@
 package org.connid.bundles.unix.utilities;
 
 import java.util.Set;
+
 import org.connid.bundles.unix.UnixConfiguration;
+import org.connid.bundles.unix.methods.UnixCreate;
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 
 public class SharedTestMethods {
+	
+	protected static final String DEFAUL_SHELL = "/bin/rbash";
+	
+	private static final Log LOG = Log.getLog(SharedTestMethods.class);
 
     protected final UnixConfiguration createConfiguration() {
         // create the connector configuration..
@@ -60,10 +67,15 @@ public class SharedTestMethods {
         attributes.add(AttributeBuilder.build("comment", CollectionUtil.newSet(
                 attrs.getUsername())));
         attributes.add(AttributeBuilder.build("shell", CollectionUtil.newSet(
-                "/bin/bash")));
+                DEFAUL_SHELL)));
         attributes.add(AttributeBuilder.build("homeDir", CollectionUtil.newSet(
                 "/home/"+attrs.getUsername())));
         attributes.add(name);
         return attributes;
+    }
+    
+    public void printTestTitle(String testName){
+    	System.out.println("============"+ testName + "===========");
+    	LOG.info("============"+ testName + "===========");
     }
 }

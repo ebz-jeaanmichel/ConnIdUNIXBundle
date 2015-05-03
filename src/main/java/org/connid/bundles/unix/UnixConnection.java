@@ -51,6 +51,8 @@ public class UnixConnection {
     private ChannelExec execChannel;
 
     private InputStream fromServer;
+    
+    private InputStream errorStream;
 
     private static JSch jSch = new JSch();
 
@@ -81,7 +83,7 @@ public class UnixConnection {
         UnixConnection.unixConfiguration = unixConfiguration;
     }
 
-    public String execute(final String command) throws JSchException, IOException {
+    public UnixResult execute(final String command) throws JSchException, IOException {
         if (!session.isConnected()) {
             initSession(unixConfiguration);
             session.connect(unixConfiguration.getSshConnectionTimeout());
@@ -89,6 +91,7 @@ public class UnixConnection {
         if (execChannel == null || !execChannel.isConnected()) {
             execChannel = (ChannelExec) session.openChannel("exec");
             fromServer = execChannel.getInputStream();
+            errorStream = execChannel.getErrStream();
         }
         LOG.info("Command to execute: " + command);
         execChannel.setCommand(command);
@@ -98,14 +101,15 @@ public class UnixConnection {
         return readOutput();
     }
     
-    public String execute(final String command, final String password) throws JSchException, IOException {
+    public UnixResult execute(final String command, final String password) throws JSchException, IOException {
         if (!session.isConnected()) {
             initSession(unixConfiguration);
             session.connect(unixConfiguration.getSshConnectionTimeout());
         }
         if (execChannel == null || !execChannel.isConnected()) {
             execChannel = (ChannelExec) session.openChannel("exec");
-//            fromServer = execChannel.getInputStream();
+            fromServer = execChannel.getInputStream();
+            errorStream = execChannel.getErrStream();
         }
         ChannelShell shellChannel = (ChannelShell) session.openChannel("shell");
         LOG.info("Command to execute: " + command);
@@ -113,39 +117,20 @@ public class UnixConnection {
         execChannel.setPty(true);
         execChannel.connect();
         OutputStream out = execChannel.getOutputStream();
-        LOG.info("Reading output");
         if (StringUtil.isNotBlank(password)){
         	sleep(1500);
-//        	PipedOutputStream pout = new PipedOutputStream();
-//        	PipedInputStream in = new PipedInputStream(pout);
-//        	execChannel.setInputStream(in);
-        	
         	out.write((password+"\n").getBytes());
         	out.flush();
         	sleep(1500);
-//        	execChannel.connect(5000);
         	out.write((password+"\n").getBytes());
         	out.flush();
         	sleep(1500);
-        	
         }
         
-        return readOutput(true);
+        return readOutput();
     }
 
-    private String readOutput(boolean skipInput) throws IOException {
-        String line;
-       
-        if (execChannel.isClosed()) {
-            LOG.info("exit-status: " + execChannel.getExitStatus());
-        }
-        sleep(1000);
-//        LOG.info("buffer ", buffer.toString());
-        return String.valueOf(execChannel.getExitStatus());
-    }
-
-    
-    private String readOutput() throws IOException {
+    private UnixResult readOutput() throws IOException {
         String line;
        
         BufferedReader br = new BufferedReader(
@@ -155,18 +140,25 @@ public class UnixConnection {
         while ((line = br.readLine()) != null) {
             buffer.append(line).append("\n");
         }
-    }
-//        InputStream error = execChannel.getErrStream();
-//        if (error != null){
-//        	byte[] errorMessage = IOUtil.readInputStreamBytes(error, true);
-//        	throw new ConnectorException(new String(errorMessage));
-//        }
+        }
         if (execChannel.isClosed()) {
             LOG.info("exit-status: " + execChannel.getExitStatus());
         }
+        
+        StringBuilder errorMessage = new StringBuilder();
+        if (errorStream.available() > 0){
+        	BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
+        	String error;
+        	while ((error = errorReader.readLine()) != null){
+        		errorMessage.append(error).append("\n");
+        	}
+        }
+        
         sleep(1000);
-        LOG.info("buffer ", buffer.toString());
-        return buffer.toString();
+        LOG.info("buffer "+ buffer.toString());
+        LOG.info("error buffer "+ errorMessage.toString());
+        
+        return new UnixResult(execChannel.getExitStatus(), errorMessage.toString(), buffer.toString());
     }
 
     private void sleep(final long timeout) {

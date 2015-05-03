@@ -15,6 +15,9 @@
  */
 package org.connid.bundles.unix.utilities;
 
+import java.util.List;
+
+import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.identityconnectors.common.security.GuardedString;
 
 public class Utilities {
@@ -35,4 +38,19 @@ public class Utilities {
         });
         return builder.toString();
     }
+    
+    public static boolean checkOccurence(SchemaAccountAttribute accountAttr,
+			List<Object> values) {
+		
+    	Integer occurence = accountAttr.getOccurence();
+    	
+    	if (occurence == 1){
+    		if (values != null && !values.isEmpty()){
+    			return values.size() == 1;
+    		}
+    	}
+    	
+    	return true;
+    	
+	}
 }

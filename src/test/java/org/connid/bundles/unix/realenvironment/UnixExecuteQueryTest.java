@@ -34,6 +34,8 @@ import org.junit.Test;
 
 public class UnixExecuteQueryTest extends SharedTestMethods {
 
+	private static final String TEST_CLASS = "UnixExecuteQueryTest.";
+	
     private UnixConnector connector = null;
 
     private Name name = null;
@@ -52,6 +54,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchUser() {
+    	printTestTitle(TEST_CLASS+"searchUser()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -76,6 +79,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchStartsWithAttribute() {
+    	printTestTitle(TEST_CLASS+"searchStartsWithAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -96,6 +100,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchEndsWithAttribute() {
+    	printTestTitle(TEST_CLASS+"searchEndsWithAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -119,6 +124,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchContainsAttribute() {
+    	printTestTitle(TEST_CLASS+"searchContainsAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -139,6 +145,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
     @Test
     @Ignore
     public final void searchNotEqualsAttribute() {
+    	printTestTitle(TEST_CLASS+"searchNotEqualsAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -158,6 +165,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public final void searchNotExistsUser() {
+    	printTestTitle(TEST_CLASS+"searchNotExistsUser()");
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
         connector.executeQuery(ObjectClass.ACCOUNT, new Operand(Operator.EQ, Uid.NAME, attrs.getWrongUsername(), false),
                 new ResultsHandler() {
@@ -172,6 +180,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchUserWithSameShell() {
+    	printTestTitle(TEST_CLASS+"searchUserWithSameShell()");
         Name name1 = new Name(attrs.getUsername());
         Uid newAccount1 = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name1, attrs.getPassword(), true), null);
@@ -186,7 +195,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
                 createSetOfAttributes(name4, attrs.getPassword(), true), null);
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
         connector.executeQuery(ObjectClass.ACCOUNT,
-                new Operand(Operator.EQ, "shell", "/bin/rbash", false),
+                new Operand(Operator.EQ, "shell", SharedTestMethods.DEFAUL_SHELL, false),
                 new ResultsHandler() {
 
                     @Override
@@ -204,6 +213,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchGroup() {
+    	printTestTitle(TEST_CLASS+"searchGroup()");
         newAccount = connector.create(ObjectClass.GROUP,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -225,6 +235,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public void executeQueryWithWrongObjectClass() {
+    	printTestTitle(TEST_CLASS+"executeQueryWithWrongObjectClass()");
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
         connector.executeQuery(attrs.getWrongObjectClass(), null,
                 new ResultsHandler() {
@@ -239,6 +250,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public void executeQueryTestWithAllNull() {
+    	printTestTitle(TEST_CLASS+"executeQueryTestWithAllNull()");
         connector.executeQuery(null, null, null, null);
     }
 

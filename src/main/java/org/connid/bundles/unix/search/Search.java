@@ -59,8 +59,8 @@ public class Search {
     public void equalSearch() throws IOException, InterruptedException, JSchException {
         if (objectClass.equals(ObjectClass.ACCOUNT)) {
             PasswdFile passwdFile = new PasswdFile(getPasswdFileOutput(
-                    unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser())));
-            fillUserHandler(passwdFile.searchRowByAttribute(
+                    unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser()).getOutput()));
+            fillUserHandler(passwdFile.searchRowByAttribute(filter.getAttributeName(), 
                     filter.getAttributeValue(), filter.isNot()));
         } else if (objectClass.equals(ObjectClass.GROUP)) {
             fillGroupHandler();
@@ -76,8 +76,8 @@ public class Search {
     public void startsWithSearch() throws IOException, InterruptedException, JSchException {
         if (objectClass.equals(ObjectClass.ACCOUNT)) {
             PasswdFile passwdFile = new PasswdFile(getPasswdFileOutput(
-                    unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser())));
-            fillUserHandler(passwdFile.searchRowByStartsWithValue(
+                    unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser()).getOutput()));
+            fillUserHandler(passwdFile.searchRowByStartsWithValue(filter.getAttributeName(),
                     filter.getAttributeValue()));
         } else if (objectClass.equals(ObjectClass.GROUP)) {
             fillGroupHandler();
@@ -87,8 +87,8 @@ public class Search {
     public void endsWithSearch() throws IOException, InterruptedException, JSchException {
         if (objectClass.equals(ObjectClass.ACCOUNT)) {
             PasswdFile passwdFile = new PasswdFile(getPasswdFileOutput(
-                    unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser())));
-            fillUserHandler(passwdFile.searchRowByEndsWithValue(
+                    unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser()).getOutput()));
+            fillUserHandler(passwdFile.searchRowByEndsWithValue(filter.getAttributeName(),
                     filter.getAttributeValue()));
         } else if (objectClass.equals(ObjectClass.GROUP)) {
             fillGroupHandler();
@@ -98,9 +98,9 @@ public class Search {
     public void containsSearch() throws IOException, InterruptedException, JSchException {
         if (objectClass.equals(ObjectClass.ACCOUNT)) {
             PasswdFile passwdFile = new PasswdFile(getPasswdFileOutput(
-                    unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser())));
+                    unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser()).getOutput()));
             fillUserHandler(
-                    passwdFile.searchRowByContainsValue(
+                    passwdFile.searchRowByContainsValue(filter.getAttributeName(),
                     filter.getAttributeValue()));
         } else if (objectClass.equals(ObjectClass.GROUP)) {
             fillGroupHandler();
@@ -145,7 +145,7 @@ public class Search {
                 bld.addAttribute(OperationalAttributes.ENABLE_NAME,
                         EvaluateCommandsResultOutput.evaluateUserStatus(
                         unixConnection.execute(UnixConnector.getCommandGenerator().
-                        userStatus(filter.getAttributeValue()))));
+                        userStatus(filter.getAttributeValue())).getOutput()));
             }
             handler.handle(bld.build());
         }
@@ -156,7 +156,7 @@ public class Search {
         if (StringUtil.isNotBlank(nameToSearch)
                 && StringUtil.isNotEmpty(nameToSearch)
                 && EvaluateCommandsResultOutput.evaluateUserOrGroupExists(
-                unixConnection.execute(UnixConnector.getCommandGenerator().groupExists(nameToSearch)))) {
+                unixConnection.execute(UnixConnector.getCommandGenerator().groupExists(nameToSearch)).getOutput())) {
             ConnectorObjectBuilder bld = new ConnectorObjectBuilder();
             bld.setName(nameToSearch);
             bld.setUid(nameToSearch);

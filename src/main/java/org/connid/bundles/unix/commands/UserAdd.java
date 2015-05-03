@@ -15,14 +15,12 @@
  */
 package org.connid.bundles.unix.commands;
 
-import java.util.List;
 import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.schema.SchemaAccountAttribute;
-import org.identityconnectors.common.StringUtil;
+import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.Name;
 
 public class UserAdd {
@@ -113,7 +111,7 @@ public class UserAdd {
         	if (accountAttr == null){
         		continue;
         	}
-        	if (!checkOccurence(accountAttr, attr.getValue())){
+        	if (!Utilities.checkOccurence(accountAttr, attr.getValue())){
         		throw new IllegalArgumentException("Attempt to add multi value attribute to the single valued attribute " + attr.getName());
         	}
         	
@@ -160,21 +158,7 @@ public class UserAdd {
         return useraddCommand.toString();
     }
 
-    private boolean checkOccurence(SchemaAccountAttribute accountAttr,
-			List<Object> values) {
-		
-    	Integer occurence = accountAttr.getOccurence();
-    	
-    	if (occurence == 1){
-    		if (values != null && !values.isEmpty()){
-    			return values.size() == 1;
-    		}
-    	}
-    	
-    	return true;
-    	
-	}
-
+   
 	public String useradd() {
         return createUserAddCommand();
     }

@@ -30,6 +30,7 @@ import org.connid.bundles.unix.commands.Passwd;
 import org.connid.bundles.unix.commands.Sed;
 import org.connid.bundles.unix.commands.Sudo;
 import org.connid.bundles.unix.commands.UserAdd;
+import org.connid.bundles.unix.commands.UserDel;
 import org.connid.bundles.unix.commands.UserMod;
 import org.identityconnectors.framework.common.objects.Attribute;
 
@@ -65,7 +66,7 @@ public class CommandGenerator {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-            commandToExecute.append(sudoCommand.sudo()).append("; ");
+            commandToExecute.append(sudoCommand.sudo());
         }
         commandToExecute.append(General.searchGroupIntoGroupFile(groupname));
         return commandToExecute.toString();
@@ -80,18 +81,6 @@ public class CommandGenerator {
         return commandToExecute.append(General.searchUserStatusIntoShadowFile(username)).toString();
     }
 
-//    public String createUser(final String username, final String password,
-//            final String comment, final String shell,
-//            final String homeDirectory, final boolean status) {
-//        StringBuilder commandToExecute = new StringBuilder();
-//        if (!unixConfiguration.isRoot()) {
-//            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-//            commandToExecute.append(sudoCommand.sudo());
-//        }
-//        commandToExecute.append(createUserAddCommand(username, password, comment, shell, homeDirectory));
-//        return commandToExecute.toString();
-//    }
-    
     public String createUser(String username, Set<Attribute> attributes) {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
@@ -115,39 +104,26 @@ public class CommandGenerator {
     
 
     public String deleteUser(final String username) {
-        DelUser userDelCommand =
-                new DelUser(unixConfiguration, username);
+        UserDel userDelCommand =
+                new UserDel(unixConfiguration, username);
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        commandToExecute.append(userDelCommand.deluser());
-//        return commandToExecute.toString();
-//        Sed sedCommand = new Sed(username);
-//        commandToExecute.append(sedCommand.sedCommand("/etc/shadow") + " && " + sedCommand.sedCommand("/etc/passwd") + " && "
-//                + sedCommand.sedCommand("/etc/group") + " &&" + "rm -rf " + unixConfiguration.
-//                getBaseHomeDirectory() + "/" + username);
+        commandToExecute.append(userDelCommand.userdel());
         return commandToExecute.toString();
     }
 
     private String createUserAddCommand(String username, Set<Attribute> attributes) {
         UserAdd userAddCommand = new UserAdd(unixConfiguration, username, attributes);
         StringBuilder commandToExecute = new StringBuilder();
-//        if (!unixConfiguration.isRoot()) {
-//            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-//            commandToExecute.append(sudoCommand.sudo());
-//        }
         commandToExecute.append(userAddCommand.useradd());
         return commandToExecute.toString();
     }
     
 
-    public String lockUser(final String username) {
-        UserMod userModCommand = new UserMod();
-        return userModCommand.lockUser(username);
-    }
-
+   
     public String createGroup(final String groupName)
             throws IOException, JSchException {
 
@@ -155,39 +131,52 @@ public class CommandGenerator {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-            commandToExecute.append(sudoCommand.sudo()).append("; ");
+            commandToExecute.append(sudoCommand.sudo());
         }
         commandToExecute.append(groupAddCommand.groupadd());
         return commandToExecute.toString();
     }
 
     public String updateUser(final String actualUsername,
-            final String newUserName, final String password,
-            final boolean status, final String comment, final String shell,
-            final String homeDirectory) {
+            Set<Attribute> attributes) {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-            commandToExecute.append(sudoCommand.sudo()).append("; ");
+            commandToExecute.append(sudoCommand.sudo());
         }
-        commandToExecute.append(createModCommand(actualUsername, newUserName, password, comment, shell, homeDirectory));
+        commandToExecute.append(createModCommand(actualUsername, attributes));
+        return commandToExecute.toString();
+    }
+    
+    public String lockUser(final String username) {
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+    	UserMod userModCommand = new UserMod();
+    	commandToExecute.append(userModCommand.lockUser(username));
         return commandToExecute.toString();
     }
 
+
     public String unlockUser(String username)
             throws IOException, JSchException {
+        StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
         UserMod userModCommand = new UserMod();
-        return userModCommand.unlockUser(username);
+        commandToExecute.append(userModCommand.unlockUser(username));
+        return commandToExecute.toString();
     }
 
     private String createModCommand(final String actualUsername,
-            final String newUserName, final String password,
-            final String comment, final String shell,
-            final String homeDirectory) {
+            final Set<Attribute> attributes) {
         UserMod userModCommand = new UserMod();
         StringBuilder commandToExecute = new StringBuilder();
-        commandToExecute.append(userModCommand.userMod(actualUsername, newUserName, password, comment, shell,
-                homeDirectory));
+        commandToExecute.append(userModCommand.userMod(actualUsername, attributes));
         return commandToExecute.toString();
     }
 
@@ -197,7 +186,7 @@ public class CommandGenerator {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-            commandToExecute.append(sudoCommand.sudo()).append("; ");
+            commandToExecute.append(sudoCommand.sudo());
         }
         commandToExecute.append(groupModCommand.groupMod());
         return commandToExecute.toString();
@@ -208,14 +197,19 @@ public class CommandGenerator {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-            commandToExecute.append(sudoCommand.sudo()).append("; ");
+            commandToExecute.append(sudoCommand.sudo());
         }
         commandToExecute.append(groupDelCommand.groupDel());
         return commandToExecute.toString();
     }
 
-    public String moveHomeDirectory(final String oldUsername, final String newUsername) {
-        return "mv " + unixConfiguration.getBaseHomeDirectory() + "/" + oldUsername + " " + unixConfiguration.
-                getBaseHomeDirectory() + "/" + newUsername;
+    public String moveHomeDirectory(final String oldHomeDir, final String newHomeDir) {
+    	StringBuilder commandToExecute = new StringBuilder(); 
+    	if (!unixConfiguration.isRoot()) {
+             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+             commandToExecute.append(sudoCommand.sudo());
+         }
+    	commandToExecute.append("mv ").append(oldHomeDir).append(" ").append(newHomeDir);
+        return commandToExecute.toString();
     }
 }

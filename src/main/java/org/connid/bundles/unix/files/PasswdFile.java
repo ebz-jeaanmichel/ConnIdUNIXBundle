@@ -18,7 +18,10 @@ package org.connid.bundles.unix.files;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
+import org.identityconnectors.framework.common.objects.Uid;
 
 public class PasswdFile {
 
@@ -34,84 +37,125 @@ public class PasswdFile {
         }
     }
 
-    public final List<PasswdRow> searchRowByAttribute(final String attribute, final boolean not) {
+    public final List<PasswdRow> searchRowByAttribute(final String attributeName, final String attributeValue, final boolean not) {
         List<PasswdRow> userRow = new ArrayList<PasswdRow>();
         for (Iterator<PasswdRow> it = passwdRows.iterator(); it.hasNext();) {
             PasswdRow passwdRow = it.next();
-            if (attribute.equalsIgnoreCase(passwdRow.getUsername())) {
-                userRow.add(passwdRow);
-            }
-            if (attribute.equalsIgnoreCase(passwdRow.getShell())) {
-                userRow.add(passwdRow);
-            }
-            if (attribute.equalsIgnoreCase(passwdRow.getComment())) {
-                userRow.add(passwdRow);
-            }
-            if (attribute.equalsIgnoreCase(passwdRow.getHomeDirectory())) {
-                userRow.add(passwdRow);
-            }
+			if (attributeName.equals(SchemaAccountAttribute.NAME.getName()) || attributeName.equals(Uid.NAME)) {
+				if (attributeValue.equalsIgnoreCase(passwdRow.getUsername())) {
+					userRow.add(passwdRow);
+				}
+			}
+			if (attributeName.equals(SchemaAccountAttribute.SHEL.getName())) {
+				if (attributeValue.equalsIgnoreCase(passwdRow.getShell())) {
+					userRow.add(passwdRow);
+				}
+			}
+			if (attributeName.equals(SchemaAccountAttribute.COMMENT.getName())) {
+
+				if (attributeValue.equalsIgnoreCase(passwdRow.getComment())) {
+					userRow.add(passwdRow);
+				}
+			}
+			if (attributeName.equals(SchemaAccountAttribute.HOME.getName())) {
+
+				if (attributeValue.equalsIgnoreCase(passwdRow.getHomeDirectory())) {
+					userRow.add(passwdRow);
+				}
+			}
         }
         return userRow;
     }
 
-    public List<PasswdRow> searchRowByStartsWithValue(
+    public List<PasswdRow> searchRowByStartsWithValue(final String attributeName,
             final String startWithValue) {
         List<PasswdRow> userRow = new ArrayList<PasswdRow>();
         for (Iterator<PasswdRow> it = passwdRows.iterator(); it.hasNext();) {
             PasswdRow passwdRow = it.next();
-            if (passwdRow.getUsername().startsWith(startWithValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getShell().startsWith(startWithValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getComment().startsWith(startWithValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getHomeDirectory().startsWith(startWithValue)) {
-                userRow.add(passwdRow);
-            }
+            if (attributeName.equals(SchemaAccountAttribute.NAME.getName()) || attributeName.equals(Uid.NAME)) {
+            	 if (passwdRow.getUsername().startsWith(startWithValue)) {
+                     userRow.add(passwdRow);
+                 }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.SHEL.getName())) {
+				if (passwdRow.getShell().startsWith(startWithValue)) {
+	                userRow.add(passwdRow);
+	            }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.COMMENT.getName())) {
+
+				 if (passwdRow.getComment().startsWith(startWithValue)) {
+		                userRow.add(passwdRow);
+		            }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.HOME.getName())) {
+
+				 if (passwdRow.getHomeDirectory().startsWith(startWithValue)) {
+		                userRow.add(passwdRow);
+		            }
+			}
+           
         }
         return userRow;
     }
 
-    public List<PasswdRow> searchRowByEndsWithValue(
+    public List<PasswdRow> searchRowByEndsWithValue(final String attributeName, 
             final String endsWithValue) {
         List<PasswdRow> userRow = new ArrayList<PasswdRow>();
         for (Iterator<PasswdRow> it = passwdRows.iterator(); it.hasNext();) {
             PasswdRow passwdRow = it.next();
-            if (passwdRow.getUsername().endsWith(endsWithValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getShell().endsWith(endsWithValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getComment().endsWith(endsWithValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getHomeDirectory().endsWith(endsWithValue)) {
-                userRow.add(passwdRow);
-            }
+            if (attributeName.equals(SchemaAccountAttribute.NAME.getName()) || attributeName.equals(Uid.NAME)) {
+            	 if (passwdRow.getUsername().endsWith(endsWithValue)) {
+                     userRow.add(passwdRow);
+                 }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.SHEL.getName())) {
+				if (passwdRow.getShell().endsWith(endsWithValue)) {
+	                userRow.add(passwdRow);
+	            }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.COMMENT.getName())) {
+
+				if (passwdRow.getComment().endsWith(endsWithValue)) {
+	                userRow.add(passwdRow);
+	            }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.HOME.getName())) {
+				if (passwdRow.getHomeDirectory().endsWith(endsWithValue)) {
+	                userRow.add(passwdRow);
+	            }
+			}
+            
         }
         return userRow;
     }
 
-    public List<PasswdRow> searchRowByContainsValue(String containsValue) {
+    public List<PasswdRow> searchRowByContainsValue(String attributeName, String containsValue) {
         List<PasswdRow> userRow = new ArrayList<PasswdRow>();
         for (Iterator<PasswdRow> it = passwdRows.iterator(); it.hasNext();) {
             PasswdRow passwdRow = it.next();
-            if (passwdRow.getUsername().contains(containsValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getShell().contains(containsValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getComment().contains(containsValue)) {
-                userRow.add(passwdRow);
-            }
-            if (passwdRow.getHomeDirectory().contains(containsValue)) {
-                userRow.add(passwdRow);
-            }
+            if (attributeName.equals(SchemaAccountAttribute.NAME.getName()) || attributeName.equals(Uid.NAME)) {
+            	if (passwdRow.getUsername().contains(containsValue)) {
+                    userRow.add(passwdRow);
+                }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.SHEL.getName())) {
+				 if (passwdRow.getShell().contains(containsValue)) {
+		                userRow.add(passwdRow);
+		            }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.COMMENT.getName())) {
+				 if (passwdRow.getComment().contains(containsValue)) {
+		                userRow.add(passwdRow);
+		            }
+			}
+			if (attributeName.equals(SchemaAccountAttribute.HOME.getName())) {
+				 if (passwdRow.getHomeDirectory().contains(containsValue)) {
+		                userRow.add(passwdRow);
+		            }
+			}
+           
+           
         }
         return userRow;
     }

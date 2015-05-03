@@ -93,7 +93,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     }
 
-    @Test(expected = ConnectorException.class)
+//    @Test(expected = ConnectorException.class)
     public final void updateUnlockedUser() {
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),

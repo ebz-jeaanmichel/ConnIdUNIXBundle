@@ -6,7 +6,7 @@ import org.identityconnectors.framework.common.objects.Uid;
 
 public enum SchemaAccountAttribute {
 	
-	NAME(Name.NAME, "", true, String.class, 1),
+	NAME(Name.NAME, "-l", true, String.class, 1),
 	BASE_DIR("baseDir", "-b", false, String.class, 1),
 	COMMENT("comment", "-c", false, String.class, 1),
 	HOME("homeDir", "-d", false, String.class, 1),
@@ -16,7 +16,7 @@ public enum SchemaAccountAttribute {
 	GROUPS("groups", "-G", false, String.class, -1),
 	KEY("key", "-K", false, String.class, -1),
 	SHEL("shell", "-s", false, String.class, 1),
-	UID(Uid.NAME, "-u", false, Integer.class, 1),
+	UID("uid", "-u", false, Integer.class, 1),
 	SYSTEM_ACCOUNT("systemAccount", "-r", false, Boolean.class, 1),
 	USER_GROUP("createUserGroup", "-U", false, Boolean.class,1),
 	SELINUX("selinux", "-Z", false, String.class, 1);

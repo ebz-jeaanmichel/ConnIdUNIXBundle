@@ -15,7 +15,12 @@
  */
 package org.connid.bundles.unix.commands;
 
+import java.util.Set;
+
+import org.connid.bundles.unix.schema.SchemaAccountAttribute;
+import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.framework.common.objects.Attribute;
 
 public class UserMod {
 
@@ -79,43 +84,52 @@ public class UserMod {
      */
     private static final String PASSWORD_OPTION = "-p";
 
+//    public String userMod(final String actualUsername,
+//            final String newUsername, final String password, final String comment, final String shell,
+//            final String homeDirectory) {
+//        return createUserModCommand(actualUsername, newUsername, password, comment, shell,
+//                homeDirectory);
+//    }
+    
     public String userMod(final String actualUsername,
-            final String newUsername, final String password, final String comment, final String shell,
-            final String homeDirectory) {
-        return createUserModCommand(actualUsername, newUsername, password, comment, shell,
-                homeDirectory);
+            Set<Attribute> attributes) {
+        return createUserModCommand(actualUsername, attributes);
     }
 
     private String createUserModCommand(final String actualUsername,
-            final String newUsername, final String password, final String comment, final String shell,
-            final String homeDirectory) {
+            final Set<Attribute> attributes) {
         StringBuilder usermodCommand = new StringBuilder(USERMOD_COMMAND + " ");
 //        if ((StringUtil.isNotBlank(password))
 //                && (StringUtil.isNotEmpty(password))) {
 //            usermodCommand.append(PASSWORD_OPTION).append(" $(perl -e 'print crypt(")
 //                    .append(password).append(", ").append(password).append(");') ");
 //        }
-        if ((StringUtil.isNotBlank(newUsername))
-                && (StringUtil.isNotEmpty(newUsername))) {
-            usermodCommand.append(CHANGE_LOGIN_OPTION).append(
-                    " ").append(newUsername).append(" ");
+        for (Attribute attribute : attributes){
+        	SchemaAccountAttribute schemaAttr = SchemaAccountAttribute.findAttribute(attribute.getName());
+        	if (schemaAttr == null){
+        		continue;
+        	}
+        	
+        	if (!Utilities.checkOccurence(schemaAttr, attribute.getValue())){
+        		throw new IllegalArgumentException("Attempt to add multi value attribute to the single valued attribute " + attribute.getName());
+        	}
+        	
+        	if (attribute.getValue() == null || attribute.getValue().isEmpty()){
+        		continue;
+        	}
+        	
+        	for (Object value : attribute.getValue()){
+        		if (Boolean.class.isAssignableFrom(schemaAttr.getType())){
+            		if (((Boolean) value)){
+            			usermodCommand.append(schemaAttr.getCommand()).append(" ");
+            		}
+            	} else {
+            		usermodCommand.append(schemaAttr.getCommand()).append(" ");
+            		usermodCommand.append(value).append(" ");
+            	}
+        	}
         }
-        if ((StringUtil.isNotBlank(comment))
-                && (StringUtil.isNotEmpty(comment))) {
-            usermodCommand.append(COMMENT_OPTION).append(
-                    " ").append(comment).append(" ");
-        }
-        if ((StringUtil.isNotBlank(shell))
-                && (StringUtil.isNotEmpty(shell))) {
-            usermodCommand.append(SHELL_OPTION).append(
-                    " ").append(shell).append(" ");
-        }
-        if ((StringUtil.isNotBlank(homeDirectory))
-                && (StringUtil.isNotEmpty(homeDirectory))) {
-            usermodCommand.append(HOMEDIRECTORY_OPTION).append(
-                    " ").append(homeDirectory).append(
-                    MOVE_FILE_OPTION).append(" ");
-        }
+       
         usermodCommand.append(actualUsername);
         return usermodCommand.toString();
     }

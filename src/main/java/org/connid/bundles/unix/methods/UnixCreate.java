@@ -23,12 +23,16 @@ import java.util.Set;
 import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
+import org.connid.bundles.unix.UnixResult;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
 import org.identityconnectors.framework.common.objects.*;
 
 public class UnixCreate {
@@ -86,54 +90,59 @@ public class UnixCreate {
         String username = name.getNameValue();
 
         if (objectClass.equals(ObjectClass.ACCOUNT)) {
-            if (EvaluateCommandsResultOutput.evaluateUserOrGroupExists(
-                    unixConnection.execute(UnixConnector.getCommandGenerator().userExists(username)))) {
-                throw new AlreadyExistsException(
-                        "User " + username + " already exists");
-            }
 
             for (Attribute attr : attrs) {
-                if (attr.is(OperationalAttributes.PASSWORD_NAME)) {
-                    continue;
-                } else if (attr.is(OperationalAttributes.ENABLE_NAME)) {
+                if (attr.is(OperationalAttributes.ENABLE_NAME)) {
                     // manage enable/disable status
                     if (attr.getValue() != null && !attr.getValue().isEmpty()) {
                         status = Boolean.parseBoolean(
                                 attr.getValue().get(0).toString());
                     }
                 }
-//                } else if (attr.is(configuration.getCommentAttribute())) {
-//                    comment = attr.getValue().get(0).toString();
-//                } else if (attr.is(configuration.getShellAttribute())) {
-//                    shell = (String) attr.getValue().get(0).toString();
-//                } else if (attr.is(configuration.getHomeDirectoryAttribute())) {
-//                    homeDirectory = (String) attr.getValue().get(0).toString();
-//                }
             }
 
+                       UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().
+                    createUser(username, attrs));
+            
+            switch(result.getExitStatus()){
+            case 4:
+            case 9:
+            	throw new AlreadyExistsException("Could not create account: " + result.getErrorMessage());
+            case 2:
+            case 3:
+            	throw new ConfigurationException("Could not create account: " + result.getErrorMessage());
+            case 1:
+            case 6:
+            case 10:
+            case 12:
+            case 14:
+            	throw new ConnectorException("Could not create user: " + result.getErrorMessage());
+            }
+      
             final String password = Utilities.getPlainPassword(
                     AttributeUtil.getPasswordValue(attrs));
-
-            unixConnection.execute(UnixConnector.getCommandGenerator().
-                    createUser(username, attrs));
-            if (password != null){
-            	String status = unixConnection.execute(UnixConnector.getCommandGenerator().setPassword(username, password), password);
-            	LOG.info("status ", status);
-            	
-            	if (status.matches("Enter new UNIX password: ")){
-            		status = unixConnection.execute(password);
-            		LOG.info("status ", status);
-            		if (status.matches("Retype new UNIX password")){
-            			unixConnection.execute(password);
-            		}
-            	}
+            result = unixConnection.execute(UnixConnector.getCommandGenerator().setPassword(username, password), password);
+            LOG.info("status ", status);
+            
+            switch(result.getExitStatus()){
+            case 1 :
+            	throw new PermissionDeniedException("Could not change password: " + result.getErrorMessage());
+            case 2:
+            case 6:
+            	throw new ConfigurationException("Could not change password: " + result.getErrorMessage());
+            case 3:
+            case 4:
+            	throw new ConnectorException("Could not change password: " + result.getErrorMessage());
+            case 5:
+            	throw new ConnectionBrokenException("Could not change password: " + result.getErrorMessage());
             }
+            
             if (!status) {
-                unixConnection.execute(UnixConnector.getCommandGenerator().lockUser(username));
+                result = unixConnection.execute(UnixConnector.getCommandGenerator().lockUser(username));
             }
         } else if (objectClass.equals(ObjectClass.GROUP)) {
             if (EvaluateCommandsResultOutput.evaluateUserOrGroupExists(
-                    unixConnection.execute(UnixConnector.getCommandGenerator().groupExists(username)))) {
+                    unixConnection.execute(UnixConnector.getCommandGenerator().groupExists(username)).getOutput())) {
                 throw new ConnectorException(
                         "Group " + username + " already exists");
             }
