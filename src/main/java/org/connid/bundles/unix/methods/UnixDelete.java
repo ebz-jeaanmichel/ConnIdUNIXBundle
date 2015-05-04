@@ -23,6 +23,7 @@ import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
+import org.connid.bundles.unix.UnixResult.Operation;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -37,8 +38,6 @@ public class UnixDelete {
 
 	private static final Log LOG = Log.getLog(UnixDelete.class);
 
-	private UnixConfiguration configuration = null;
-
 	private UnixConnection unixConnection = null;
 
 	private Uid uid = null;
@@ -47,8 +46,7 @@ public class UnixDelete {
 
 	public UnixDelete(final ObjectClass oc, final UnixConfiguration unixConfiguration, final Uid uid)
 			throws IOException, JSchException {
-		configuration = unixConfiguration;
-		unixConnection = UnixConnection.openConnection(configuration);
+		unixConnection = UnixConnection.openConnection(unixConfiguration);
 		this.uid = uid;
 		objectClass = oc;
 	}
@@ -75,36 +73,14 @@ public class UnixDelete {
 		}
 
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
-//			if (!EvaluateCommandsResultOutput.evaluateUserOrGroupExists(unixConnection.execute(
-//					UnixConnector.getCommandGenerator().userExists(uid.getUidValue())).getOutput())) {
-//				LOG.error("User do not exists");
-//				throw new UnknownUidException("User do not exists");
-//			}
 			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator()
 					.deleteUser(uid.getUidValue()));
-			switch (result.getExitStatus()) {
-			case 6:
-				LOG.error("User do not exists");
-				throw new UnknownUidException("Could not delete user. User do not exists: " + result.getErrorMessage());
-			case 8:
-				LOG.error("Could not delete user. Probably logged in?");
-				throw new PermissionDeniedException("Could not delete user. " + result.getErrorMessage());
-			case 1:
-			case 2:
-			case 10:
-			case 12:
-				LOG.error("Could not delete user: " + result.getErrorMessage());
-				throw new ConfigurationException("Could not delete user: " + result.getErrorMessage());
-
-			}
+			result.checkResult(Operation.USERDEL);
 			LOG.info("User deleted successfully");
 		} else if (objectClass.equals(ObjectClass.GROUP)) {
-			if (!EvaluateCommandsResultOutput.evaluateUserOrGroupExists(unixConnection.execute(
-					UnixConnector.getCommandGenerator().groupExists(uid.getUidValue())).getOutput())) {
-				throw new UnknownUidException("Group do not exists");
-			}
 			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().deleteGroup(
 					uid.getUidValue()));
+			result.checkResult(Operation.GROUPDEL);
 
 		}
 	}

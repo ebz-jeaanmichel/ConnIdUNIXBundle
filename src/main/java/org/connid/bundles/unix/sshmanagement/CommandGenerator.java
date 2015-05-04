@@ -15,24 +15,22 @@
  */
 package org.connid.bundles.unix.sshmanagement;
 
-import com.jcraft.jsch.JSchException;
-
 import java.io.IOException;
 import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
-import org.connid.bundles.unix.commands.DelUser;
 import org.connid.bundles.unix.commands.General;
 import org.connid.bundles.unix.commands.GroupAdd;
 import org.connid.bundles.unix.commands.GroupDel;
 import org.connid.bundles.unix.commands.GroupMod;
 import org.connid.bundles.unix.commands.Passwd;
-import org.connid.bundles.unix.commands.Sed;
 import org.connid.bundles.unix.commands.Sudo;
 import org.connid.bundles.unix.commands.UserAdd;
 import org.connid.bundles.unix.commands.UserDel;
 import org.connid.bundles.unix.commands.UserMod;
 import org.identityconnectors.framework.common.objects.Attribute;
+
+import com.jcraft.jsch.JSchException;
 
 public class CommandGenerator {
 
@@ -87,7 +85,8 @@ public class CommandGenerator {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        commandToExecute.append(createUserAddCommand(username, attributes));
+        UserAdd userAddCommand = new UserAdd(unixConfiguration, username, attributes);
+        commandToExecute.append(userAddCommand.useradd());
         return commandToExecute.toString();
     }
     
@@ -115,24 +114,15 @@ public class CommandGenerator {
         return commandToExecute.toString();
     }
 
-    private String createUserAddCommand(String username, Set<Attribute> attributes) {
-        UserAdd userAddCommand = new UserAdd(unixConfiguration, username, attributes);
-        StringBuilder commandToExecute = new StringBuilder();
-        commandToExecute.append(userAddCommand.useradd());
-        return commandToExecute.toString();
-    }
-    
-
    
     public String createGroup(final String groupName)
             throws IOException, JSchException {
-
-        GroupAdd groupAddCommand = new GroupAdd(groupName);
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
+        GroupAdd groupAddCommand = new GroupAdd(groupName);
         commandToExecute.append(groupAddCommand.groupadd());
         return commandToExecute.toString();
     }
@@ -144,7 +134,8 @@ public class CommandGenerator {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        commandToExecute.append(createModCommand(actualUsername, attributes));
+        UserMod userModCommand = new UserMod(unixConfiguration, actualUsername, attributes);
+        commandToExecute.append(userModCommand.userMod());
         return commandToExecute.toString();
     }
     
@@ -154,7 +145,7 @@ public class CommandGenerator {
         	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
         	commandToExecute.append(sudoCommand.sudo());
         }
-    	UserMod userModCommand = new UserMod();
+    	UserMod userModCommand = new UserMod(unixConfiguration, username, null);
     	commandToExecute.append(userModCommand.lockUser(username));
         return commandToExecute.toString();
     }
@@ -167,16 +158,8 @@ public class CommandGenerator {
         	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
         	commandToExecute.append(sudoCommand.sudo());
         }
-        UserMod userModCommand = new UserMod();
+        UserMod userModCommand = new UserMod(unixConfiguration, username, null);
         commandToExecute.append(userModCommand.unlockUser(username));
-        return commandToExecute.toString();
-    }
-
-    private String createModCommand(final String actualUsername,
-            final Set<Attribute> attributes) {
-        UserMod userModCommand = new UserMod();
-        StringBuilder commandToExecute = new StringBuilder();
-        commandToExecute.append(userModCommand.userMod(actualUsername, attributes));
         return commandToExecute.toString();
     }
 

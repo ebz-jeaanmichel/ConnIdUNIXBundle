@@ -24,6 +24,7 @@ import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
+import org.connid.bundles.unix.UnixResult.Operation;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
@@ -37,118 +38,59 @@ import org.identityconnectors.framework.common.objects.*;
 
 public class UnixCreate {
 
-    private static final Log LOG = Log.getLog(UnixCreate.class);
+	private static final Log LOG = Log.getLog(UnixCreate.class);
 
-    private Set<Attribute> attrs = null;
+	private Set<Attribute> attrs = null;
 
-    private UnixConnection unixConnection = null;
+	private UnixConnection unixConnection = null;
 
-    private UnixConfiguration configuration = null;
+	private ObjectClass objectClass = null;
 
-    private ObjectClass objectClass = null;
 
-    String comment = "";
+	boolean status = false;
 
-    String shell = "";
+	public UnixCreate(final ObjectClass oc, final UnixConfiguration unixConfiguration, final Set<Attribute> attributes)
+			throws IOException, JSchException {
+		this.attrs = attributes;
+		unixConnection = UnixConnection.openConnection(unixConfiguration);
+		objectClass = oc;
+	}
 
-    String homeDirectory = "";
+	public Uid create() {
+		try {
+			return doCreate();
+		} catch (Exception e) {
+			LOG.error(e, "error during creation");
+			throw new ConnectorException(e);
+		}
+	}
 
-    boolean status = false;
+	private Uid doCreate() throws IOException, InterruptedException, JSchException {
 
-    public UnixCreate(final ObjectClass oc,
-            final UnixConfiguration unixConfiguration,
-            final Set<Attribute> attributes) throws IOException, JSchException {
-        this.attrs = attributes;
-        unixConnection = UnixConnection.openConnection(unixConfiguration);
-        configuration = unixConfiguration;
-        objectClass = oc;
-    }
+		if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
+			throw new IllegalStateException("Wrong object class");
+		}
 
-    public Uid create() {
-        try {
-            return doCreate();
-        } catch (Exception e) {
-            LOG.error(e, "error during creation");
-            throw new ConnectorException(e);
-        }
-    }
+		final Name name = AttributeUtil.getNameFromAttributes(attrs);
 
-    private Uid doCreate() throws IOException, InterruptedException, JSchException {
+		if (name == null || StringUtil.isBlank(name.getNameValue())) {
+			throw new IllegalArgumentException("No Name attribute provided in the attributes");
+		}
 
-        if (!objectClass.equals(ObjectClass.ACCOUNT)
-                && (!objectClass.equals(ObjectClass.GROUP))) {
-            throw new IllegalStateException("Wrong object class");
-        }
+		String username = name.getNameValue();
 
-        final Name name = AttributeUtil.getNameFromAttributes(attrs);
+		if (objectClass.equals(ObjectClass.ACCOUNT)) {
+			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().createUser(username, attrs));
+			result.checkResult(Operation.USERADD);
 
-        if (name == null || StringUtil.isBlank(name.getNameValue())) {
-            throw new IllegalArgumentException(
-                    "No Name attribute provided in the attributes");
-        }
+			UnixCommon.processPassword(unixConnection, username, attrs);
+			UnixCommon.processActivation(unixConnection, username, attrs);
 
-        String username = name.getNameValue();
+		} else if (objectClass.equals(ObjectClass.GROUP)) {
+			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().createGroup(username));
+			result.checkResult(Operation.GROUPADD);
+		}
 
-        if (objectClass.equals(ObjectClass.ACCOUNT)) {
-
-            for (Attribute attr : attrs) {
-                if (attr.is(OperationalAttributes.ENABLE_NAME)) {
-                    // manage enable/disable status
-                    if (attr.getValue() != null && !attr.getValue().isEmpty()) {
-                        status = Boolean.parseBoolean(
-                                attr.getValue().get(0).toString());
-                    }
-                }
-            }
-
-                       UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().
-                    createUser(username, attrs));
-            
-            switch(result.getExitStatus()){
-            case 4:
-            case 9:
-            	throw new AlreadyExistsException("Could not create account: " + result.getErrorMessage());
-            case 2:
-            case 3:
-            	throw new ConfigurationException("Could not create account: " + result.getErrorMessage());
-            case 1:
-            case 6:
-            case 10:
-            case 12:
-            case 14:
-            	throw new ConnectorException("Could not create user: " + result.getErrorMessage());
-            }
-      
-            final String password = Utilities.getPlainPassword(
-                    AttributeUtil.getPasswordValue(attrs));
-            result = unixConnection.execute(UnixConnector.getCommandGenerator().setPassword(username, password), password);
-            LOG.info("status ", status);
-            
-            switch(result.getExitStatus()){
-            case 1 :
-            	throw new PermissionDeniedException("Could not change password: " + result.getErrorMessage());
-            case 2:
-            case 6:
-            	throw new ConfigurationException("Could not change password: " + result.getErrorMessage());
-            case 3:
-            case 4:
-            	throw new ConnectorException("Could not change password: " + result.getErrorMessage());
-            case 5:
-            	throw new ConnectionBrokenException("Could not change password: " + result.getErrorMessage());
-            }
-            
-            if (!status) {
-                result = unixConnection.execute(UnixConnector.getCommandGenerator().lockUser(username));
-            }
-        } else if (objectClass.equals(ObjectClass.GROUP)) {
-            if (EvaluateCommandsResultOutput.evaluateUserOrGroupExists(
-                    unixConnection.execute(UnixConnector.getCommandGenerator().groupExists(username)).getOutput())) {
-                throw new ConnectorException(
-                        "Group " + username + " already exists");
-            }
-            unixConnection.execute(UnixConnector.getCommandGenerator().createGroup(username));
-        }
-
-        return new Uid(username);
-    }
+		return new Uid(username);
+	}
 }

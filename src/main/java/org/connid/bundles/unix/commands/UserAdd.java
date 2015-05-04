@@ -64,33 +64,10 @@ public class UserAdd {
      * should make sure the password respects the system's password policy.
      *
      */
-//    private static final String PASSWORD_OPTION = "-p";
-//
-//    private static final String COMMENT = "-c";
-//
     private String username = "";
-//
-//    private String password = "";
-//
-//    private String comment = "";
-//
-//    private String shell = "";
-//
-//    private String homeDirectory = "";
     
     private Set<Attribute> attributes = null;
-
-//    public UserAdd(final UnixConfiguration configuration,
-//            final String username, final String password, final String comment,
-//            final String shell, final String homeDirectory) {
-//        unixConfiguration = configuration;
-//        this.username = username;
-//        this.password = password;
-//        this.comment = comment;
-//        this.shell = shell;
-//        this.homeDirectory = homeDirectory;
-//    }
-    
+ 
     public UserAdd(final UnixConfiguration configuration, String username, Set<Attribute> attributes) {
         unixConfiguration = configuration;
         this.username = username;
@@ -99,61 +76,10 @@ public class UserAdd {
 
     private String createUserAddCommand() {
         StringBuilder useraddCommand = new StringBuilder(USERADD_COMMAND + " ");
-//        useraddCommand.append(PASSWORD_OPTION).append(" $(perl -e 'print crypt(")
-//                .append(password).append(", ").append(password).append(");') ");
-        
-        for (Attribute attr : attributes){
-        	if (attr.is(Name.NAME)){
-        		continue;
-        	}
-        	
-        	SchemaAccountAttribute accountAttr = SchemaAccountAttribute.findAttribute(attr.getName());
-        	if (accountAttr == null){
-        		continue;
-        	}
-        	if (!Utilities.checkOccurence(accountAttr, attr.getValue())){
-        		throw new IllegalArgumentException("Attempt to add multi value attribute to the single valued attribute " + attr.getName());
-        	}
-        	
-        	if (attr.getValue() == null || attr.getValue().isEmpty()){
-        		continue;
-        	}
-        	
-        	for (Object value : attr.getValue()){
-        		if (Boolean.class.isAssignableFrom(accountAttr.getType())){
-            		if (((Boolean) value)){
-            			useraddCommand.append(accountAttr.getCommand()).append(" ");
-            		}
-            	} else {
-            		useraddCommand.append(accountAttr.getCommand()).append(" ");
-            		useraddCommand.append(value).append(" ");
-            	}
-        	}
-        	
-        }
+        useraddCommand.append(OptionBuilder.buildUserCommandOptions(attributes, true));
         if (unixConfiguration.isCreateHomeDirectory()) {
             useraddCommand.append(CREATE_HOME_DIR_OPTION).append(" ");
         }
-//        useraddCommand.append(BASE_HOME_DIR_OPTION).append(" ");
-//        if (StringUtil.isNotEmpty(homeDirectory)
-//                && StringUtil.isNotBlank(homeDirectory)) {
-//            useraddCommand.append(homeDirectory).append(" ");
-//        } else {
-//            useraddCommand.append(
-//                    unixConfiguration.getBaseHomeDirectory()).append(" ");
-//        }
-//        useraddCommand.append(SHELL_OPTION).append(" ");
-//        if (StringUtil.isNotEmpty(shell)
-//                && StringUtil.isNotBlank(shell)) {
-//            useraddCommand.append(shell).append(" ");
-//        } else {
-//            useraddCommand.append(
-//                    unixConfiguration.getShell()).append(" ");
-//        }
-//        if ((StringUtil.isNotBlank(comment))
-//                && (StringUtil.isNotEmpty(comment))) {
-//            useraddCommand.append(COMMENT + " ").append(comment).append(" ");
-//        }
         useraddCommand.append(username);
         return useraddCommand.toString();
     }

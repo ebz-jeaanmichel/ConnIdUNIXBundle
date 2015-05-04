@@ -26,6 +26,7 @@ import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
+import org.connid.bundles.unix.UnixResult.Operation;
 import org.connid.bundles.unix.files.PasswdFile;
 import org.connid.bundles.unix.files.PasswdRow;
 import org.connid.bundles.unix.schema.SchemaAccountAttribute;
@@ -49,33 +50,18 @@ public class UnixUpdate {
 	private static final Log LOG = Log.getLog(UnixUpdate.class);
 
 	private Set<Attribute> attrs = null;
-
-	private UnixConfiguration configuration = null;
-
+	
 	private UnixConnection unixConnection = null;
 
 	private Uid uid = null;
 
-	// private String newUserName = "";
-	//
-	// private String password = "";
-	//
-	// private boolean status = true;
-	//
-	// private String comment = "";
-	//
-	// private String shell = "";
-	//
-	// private String homeDirectory = "";
-	//
 	private ObjectClass objectClass = null;
 
 	public UnixUpdate(final ObjectClass oc, final UnixConfiguration unixConfiguration, final Uid uid,
 			final Set<Attribute> attrs) throws IOException, JSchException {
-		this.configuration = unixConfiguration;
 		this.uid = uid;
 		this.attrs = attrs;
-		unixConnection = UnixConnection.openConnection(configuration);
+		unixConnection = UnixConnection.openConnection(unixConfiguration);
 		objectClass = oc;
 	}
 
@@ -114,74 +100,38 @@ public class UnixUpdate {
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
 			
 			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().updateUser(uid.getUidValue(), attrs));
-			switch(result.getExitStatus()){
-            case 4:
-            case 9:
-            	throw new AlreadyExistsException("Could not update account: " + result.getErrorMessage());
-            case 2:
-            case 3:
-            	throw new ConfigurationException("Could not update account: " + result.getErrorMessage());
-            case 6:
-            	throw new UnknownUidException("Could not update account: " + result.getErrorMessage());
-            case 1:
-            	throw new PermissionDeniedException("Could not update user: " + result.getErrorMessage());
-            case 5:
-            case 10:
-            case 12:
-            	throw new ConnectorException("Could not update user: " + result.getErrorMessage());
-            }
+			result.checkResult(Operation.USERMOD);
       
+			PasswdRow oldUserRow = moveHomeDirectory(oldUser, unixConnection, attrs);
 			
-			if (StringUtil.isBlank(oldUser)) {
-				throw new UnknownUidException("User " + uid + " do not exists");
-			}
-			PasswdRow oldUserRow = EvaluateCommandsResultOutput.toPasswdRow(oldUser);
-			Attribute newHomeDir = AttributeUtil.find(SchemaAccountAttribute.HOME.getName(), attrs);
-			if (newHomeDir != null && newHomeDir.getValue() != null && !newHomeDir.getValue().isEmpty()) {
-				unixConnection.execute(UnixConnector.getCommandGenerator().moveHomeDirectory(
-						oldUserRow.getHomeDirectory(), (String) newHomeDir.getValue().get(0)));
-			}
+			UnixCommon.processPassword(unixConnection, newUserNameValue, attrs);
+			UnixCommon.processActivation(unixConnection, newUserNameValue, attrs);
 			
-			final String password = Utilities.getPlainPassword(
-	                    AttributeUtil.getPasswordValue(attrs));
-			if (StringUtil.isNotBlank(password)){
-				result = unixConnection.execute(
-						UnixConnector.getCommandGenerator().setPassword(newUserNameValue, password), password);
-			
-				switch (result.getExitStatus()) {
-				case 1:
-					throw new PermissionDeniedException("Could not change password: " + result.getErrorMessage());
-				case 2:
-				case 6:
-					throw new ConfigurationException("Could not change password: " + result.getErrorMessage());
-				case 3:
-				case 4:
-					throw new ConnectorException("Could not change password: " + result.getErrorMessage());
-				case 5:
-					throw new ConnectionBrokenException("Could not change password: " + result.getErrorMessage());
-				}
-			}
-			
-			Attribute status = AttributeUtil.find(OperationalAttributes.ENABLE_NAME, attrs);
-			if (status != null && status.getValue() != null && !status.getValue().isEmpty()){
-				boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
-				if (!statusValue) {
-					unixConnection.execute(UnixConnector.getCommandGenerator().lockUser(newUserNameValue));
-				} else {
-					unixConnection.execute(UnixConnector.getCommandGenerator().unlockUser(newUserNameValue));
-				}
-			}
 			
 			if (StringUtil.isNotBlank(newUserName.getNameValue())) {
-				unixConnection.execute(UnixConnector.getCommandGenerator().updateGroup(oldUserRow.getUsername(), newUserName.getNameValue()));
+				result = unixConnection.execute(UnixConnector.getCommandGenerator().updateGroup(oldUserRow.getUsername(), newUserName.getNameValue()));
+				result.checkResult(Operation.GROUPMOD);
 			}
 		} else if (objectClass.equals(ObjectClass.GROUP)) {
-			if (!EvaluateCommandsResultOutput.evaluateUserOrGroupExists(unixConnection.execute(
-					UnixConnector.getCommandGenerator().groupExists(uid.getUidValue())).getOutput())) {
-				throw new ConnectorException("Group do not exists");
-			}
-			unixConnection.execute(UnixConnector.getCommandGenerator().updateGroup(uid.getUidValue(), newUserName.getNameValue()));
+			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().updateGroup(uid.getUidValue(), newUserName.getNameValue()));
+			result.checkResult(Operation.GROUPMOD);
 		}
 		return uid;
+	}
+	
+	private static PasswdRow moveHomeDirectory(String oldUser, UnixConnection unixConnection, Set<Attribute> attrs) throws JSchException, IOException{
+		if (StringUtil.isBlank(oldUser)) {
+			throw new UnknownUidException("User do not exists");
+		}
+		PasswdRow oldUserRow = EvaluateCommandsResultOutput.toPasswdRow(oldUser);
+		Attribute newHomeDir = AttributeUtil.find(SchemaAccountAttribute.HOME.getName(), attrs);
+		if (newHomeDir != null && newHomeDir.getValue() != null && !newHomeDir.getValue().isEmpty()) {
+			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().moveHomeDirectory(
+					oldUserRow.getHomeDirectory(), (String) newHomeDir.getValue().get(0)));
+			result.checkResult(Operation.MV);
+		}
+		
+		return oldUserRow;
+		
 	}
 }

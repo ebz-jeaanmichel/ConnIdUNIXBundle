@@ -17,6 +17,8 @@ package org.connid.bundles.unix.commands;
 
 import java.util.Set;
 
+import org.connid.bundles.unix.UnixConfiguration;
+import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
@@ -83,53 +85,18 @@ public class UserMod {
      * You should make sure the password respects the system's password policy.
      */
     private static final String PASSWORD_OPTION = "-p";
-
-//    public String userMod(final String actualUsername,
-//            final String newUsername, final String password, final String comment, final String shell,
-//            final String homeDirectory) {
-//        return createUserModCommand(actualUsername, newUsername, password, comment, shell,
-//                homeDirectory);
-//    }
     
-    public String userMod(final String actualUsername,
-            Set<Attribute> attributes) {
-        return createUserModCommand(actualUsername, attributes);
+    private String actualUsername = null;
+    private Set<Attribute> attrs = null;
+    
+    public UserMod(final UnixConfiguration unixConfiguration, final String actualUsername, final Set<Attribute> attrs){
+    	this.actualUsername = actualUsername;
+    	this.attrs = attrs;
     }
-
-    private String createUserModCommand(final String actualUsername,
-            final Set<Attribute> attributes) {
-        StringBuilder usermodCommand = new StringBuilder(USERMOD_COMMAND + " ");
-//        if ((StringUtil.isNotBlank(password))
-//                && (StringUtil.isNotEmpty(password))) {
-//            usermodCommand.append(PASSWORD_OPTION).append(" $(perl -e 'print crypt(")
-//                    .append(password).append(", ").append(password).append(");') ");
-//        }
-        for (Attribute attribute : attributes){
-        	SchemaAccountAttribute schemaAttr = SchemaAccountAttribute.findAttribute(attribute.getName());
-        	if (schemaAttr == null){
-        		continue;
-        	}
-        	
-        	if (!Utilities.checkOccurence(schemaAttr, attribute.getValue())){
-        		throw new IllegalArgumentException("Attempt to add multi value attribute to the single valued attribute " + attribute.getName());
-        	}
-        	
-        	if (attribute.getValue() == null || attribute.getValue().isEmpty()){
-        		continue;
-        	}
-        	
-        	for (Object value : attribute.getValue()){
-        		if (Boolean.class.isAssignableFrom(schemaAttr.getType())){
-            		if (((Boolean) value)){
-            			usermodCommand.append(schemaAttr.getCommand()).append(" ");
-            		}
-            	} else {
-            		usermodCommand.append(schemaAttr.getCommand()).append(" ");
-            		usermodCommand.append(value).append(" ");
-            	}
-        	}
-        }
-       
+    
+    public String userMod() {
+       StringBuilder usermodCommand = new StringBuilder(USERMOD_COMMAND + " ");
+        usermodCommand.append(OptionBuilder.buildUserCommandOptions(attrs, false));
         usermodCommand.append(actualUsername);
         return usermodCommand.toString();
     }
