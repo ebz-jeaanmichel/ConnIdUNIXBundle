@@ -20,7 +20,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.connid.bundles.unix.UnixConnector;
+import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.search.Operand;
 import org.connid.bundles.unix.search.Operator;
 import org.connid.bundles.unix.utilities.AttributesTestValue;
@@ -33,101 +35,115 @@ import org.junit.Test;
 
 public class UnixCreateUserTest extends SharedTestMethods {
 
-    private UnixConnector connector = null;
+	private UnixConnector connector = null;
 
-    private Name name = null;
+	private Name name = null;
 
-    private Uid newAccount = null;
+	private Uid newAccount = null;
 
-    private AttributesTestValue attrs = null;
+	private AttributesTestValue attrs = null;
 
-    @Before
-    public final void initTest() {
-        attrs = new AttributesTestValue();
-        connector = new UnixConnector();
-        connector.init(createConfiguration());
-        name = new Name(attrs.getUsername());
-    }
+	@Before
+	public final void initTest() {
+		attrs = new AttributesTestValue();
+		connector = new UnixConnector();
+		connector.init(createConfiguration());
+		name = new Name(attrs.getUsername());
+	}
 
-    @Test
-    public final void createExistsUser() {
-        boolean userExists = false;
-        newAccount = connector.create(ObjectClass.ACCOUNT,
-                createSetOfAttributes(name, attrs.getPassword(), true), null);
-        assertEquals(name.getNameValue(), newAccount.getUidValue());
-        try {
-            connector.create(ObjectClass.ACCOUNT,
-                    createSetOfAttributes(name, attrs.getPassword(), true),
-                    null);
-        } catch (Exception e) {
-            userExists = true;
-        }
-        assertTrue(userExists);
-    }
+	@Test
+	public final void createExistsUser() {
+		printTestTitle("createExistsUser");
+		boolean userExists = false;
+		newAccount = connector
+				.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
+		assertEquals(name.getNameValue(), newAccount.getUidValue());
+		try {
+			connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
+		} catch (Exception e) {
+			userExists = true;
+		}
+		assertTrue(userExists);
+	}
 
-    @Test(expected = ConnectorException.class)
-    public final void createLockedUser() {
-        newAccount = connector.create(ObjectClass.ACCOUNT,
-                createSetOfAttributes(name, attrs.getPassword(), false), null);
-        connector.authenticate(ObjectClass.ACCOUNT, attrs.getUsername(),
-                attrs.getGuardedPassword(), null);
-    }
+	@Test
+	public final void createUserWithPubKey() {
+		printTestTitle("createUserWithPubKey");
+		boolean userExists = false;
+		Set<Attribute> attributes = createSetOfAttributes(name, attrs.getPassword(), true);
+		StringBuilder publicKey = new StringBuilder("ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAi6lZ+y6mjDg1VEl6IoJXfvsOuayj7i2WMOYjwlRWZdCOzqFw6W+KptBd+2WU+EBwtKFitYSWPc+LlihSGWEW+2XInujl8WKj1zdb/UewcvFXHVOAES32/9jvyfb935xPIKYM7OqzhUp6sHPDzauZ8V9aWek5/RZ81yPaRGmhwaE=");
 
-    @Test
-    public final void createUnLockedUser() {
-        newAccount = connector.create(ObjectClass.ACCOUNT,
-                createSetOfAttributes(name, attrs.getPassword(), true), null);
-        assertEquals(name.getNameValue(), newAccount.getUidValue());
-        final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
-        connector.executeQuery(ObjectClass.ACCOUNT, new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false),
-                new ResultsHandler() {
+		attributes.add(AttributeBuilder.build(SchemaAccountAttribute.PUBLIC_KEY.getName(), publicKey.toString()));
+		newAccount = connector.create(ObjectClass.ACCOUNT, attributes, null);
+		assertEquals(name.getNameValue(), newAccount.getUidValue());
 
-                    @Override
-                    public boolean handle(final ConnectorObject connObj) {
-                        actual.add(connObj);
-                        return true;
-                    }
-                }, null);
-        for (ConnectorObject connObj : actual) {
-            assertEquals(name.getNameValue(), connObj.getName().getNameValue());
-        }
-        connector.authenticate(ObjectClass.ACCOUNT, newAccount.getUidValue(),
-                attrs.getGuardedPassword(), null);
-    }
+	}
 
-    @Test(expected = ConnectorException.class)
-    public void createWithWrongObjectClass() {
-        connector.create(attrs.getWrongObjectClass(),
-                createSetOfAttributes(name, attrs.getPassword(), true), null);
-    }
+	@Test(expected = ConnectorException.class)
+	public final void createLockedUser() {
+		printTestTitle("createLockedUser");
+		newAccount = connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), false),
+				null);
+		connector.authenticate(ObjectClass.ACCOUNT, attrs.getUsername(), attrs.getGuardedPassword(), null);
+	}
 
-    @Test(expected = ConnectorException.class)
-    public void createTestWithNull() {
-        connector.create(attrs.getWrongObjectClass(), null, null);
-    }
+	@Test
+	public final void createUnLockedUser() {
+		printTestTitle("createUnLockedUser");
+		newAccount = connector
+				.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
+		assertEquals(name.getNameValue(), newAccount.getUidValue());
+		final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
+		connector.executeQuery(ObjectClass.ACCOUNT,
+				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
 
-    @Test(expected = ConnectorException.class)
-    public void createTestWithNameNull() {
-        connector.create(attrs.getWrongObjectClass(),
-                createSetOfAttributes(null, attrs.getPassword(), true), null);
-    }
+					@Override
+					public boolean handle(final ConnectorObject connObj) {
+						actual.add(connObj);
+						return true;
+					}
+				}, null);
+		for (ConnectorObject connObj : actual) {
+			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
+		}
+		connector.authenticate(ObjectClass.ACCOUNT, newAccount.getUidValue(), attrs.getGuardedPassword(), null);
+	}
 
-    @Test(expected = IllegalArgumentException.class)
-    public void createTestWithPasswordNull() {
-        connector.create(attrs.getWrongObjectClass(),
-                createSetOfAttributes(name, null, true), null);
-    }
+	@Test(expected = ConnectorException.class)
+	public void createWithWrongObjectClass() {
+		printTestTitle("createWithWrongObjectClass");
+		connector.create(attrs.getWrongObjectClass(), createSetOfAttributes(name, attrs.getPassword(), true), null);
+	}
 
-    @Test(expected = ConnectorException.class)
-    public void createTestWithAllNull() {
-        connector.create(null, null, null);
-    }
+	@Test(expected = ConnectorException.class)
+	public void createTestWithNull() {
+		printTestTitle("createTestWithNull");
+		connector.create(attrs.getWrongObjectClass(), null, null);
+	}
 
-    @After
-    public final void close() {
-        if (newAccount != null) {
-            connector.delete(ObjectClass.ACCOUNT, newAccount, null);
-        }
-        connector.dispose();
-    }
+	@Test(expected = ConnectorException.class)
+	public void createTestWithNameNull() {
+		printTestTitle("createTestWithNameNull");
+		connector.create(attrs.getWrongObjectClass(), createSetOfAttributes(null, attrs.getPassword(), true), null);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void createTestWithPasswordNull() {
+		printTestTitle("createTestWithPasswordNull");
+		connector.create(attrs.getWrongObjectClass(), createSetOfAttributes(name, null, true), null);
+	}
+
+	@Test(expected = ConnectorException.class)
+	public void createTestWithAllNull() {
+		printTestTitle("createTestWithAllNull");
+		connector.create(null, null, null);
+	}
+
+	@After
+	public final void close() {
+		if (newAccount != null) {
+			connector.delete(ObjectClass.ACCOUNT, newAccount, null);
+		}
+		connector.dispose();
+	}
 }

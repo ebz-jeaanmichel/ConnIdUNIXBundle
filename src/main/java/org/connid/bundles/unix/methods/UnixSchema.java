@@ -32,6 +32,7 @@ public class UnixSchema {
 	        	attrBuilder.setRequired(attr.isRequired());
 	        	attrBuilder.setType(attr.getType());
 	        	attrBuilder.setMultiValued(attr.getOccurence() == -1);
+	        	attributes.add(attrBuilder.build());
 	        }
 	        // GROUP supports no authentication:
 	        final ObjectClassInfo ociInfoGroup =
@@ -54,6 +55,7 @@ public class UnixSchema {
 	        	attrBuilder.setRequired(attr.isRequired());
 	        	attrBuilder.setType(attr.getType());
 	        	attrBuilder.setMultiValued(attr.getOccurence() == -1);
+	        	attributes.add(attrBuilder.build());
 	        }
 	                
 	        final ObjectClassInfo ociInfoAccount =

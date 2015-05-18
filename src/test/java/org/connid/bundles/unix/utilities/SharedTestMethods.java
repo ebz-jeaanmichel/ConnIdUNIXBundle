@@ -18,7 +18,6 @@ package org.connid.bundles.unix.utilities;
 import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
-import org.connid.bundles.unix.methods.UnixCreate;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -51,6 +50,17 @@ public class SharedTestMethods {
 //        config.setShellAttribute("shell");
 //        config.setHomeDirectoryAttribute("homeDir");
         return config;
+    }
+    
+    protected final Set<Attribute> createPasswordChange(String password){
+    	GuardedString encPassword = null;
+        if (password != null) {
+            encPassword = new GuardedString(password.toCharArray());
+        }
+
+        final Set<Attribute> attributes = CollectionUtil.newSet(
+                AttributeBuilder.buildPassword(encPassword));
+        return attributes;
     }
 
     protected final Set<Attribute> createSetOfAttributes(final Name name,

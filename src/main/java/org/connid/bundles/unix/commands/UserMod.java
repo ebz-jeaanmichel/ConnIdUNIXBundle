@@ -95,10 +95,15 @@ public class UserMod {
     }
     
     public String userMod() {
-       StringBuilder usermodCommand = new StringBuilder(USERMOD_COMMAND + " ");
-        usermodCommand.append(OptionBuilder.buildUserCommandOptions(attrs, false));
-        usermodCommand.append(actualUsername);
-        return usermodCommand.toString();
+       StringBuilder usermodCommand = new StringBuilder(USERMOD_COMMAND);
+       String attributeCommand = OptionBuilder.buildUserCommandOptions(attrs, false);
+       if (StringUtil.isNotBlank(attributeCommand)){
+    	   	usermodCommand.append(" ").append(attributeCommand);
+    	   	usermodCommand.append(actualUsername);
+            return usermodCommand.toString();
+       }
+       
+       return null;        
     }
 
     public String lockUser(final String username) {

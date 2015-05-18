@@ -75,8 +75,8 @@ public class UserAdd {
     }
 
     private String createUserAddCommand() {
-        StringBuilder useraddCommand = new StringBuilder(USERADD_COMMAND + " ");
-        useraddCommand.append(OptionBuilder.buildUserCommandOptions(attributes, true));
+        StringBuilder useraddCommand = new StringBuilder(USERADD_COMMAND);
+        useraddCommand.append(" ").append(OptionBuilder.buildUserCommandOptions(attributes, true));
         if (unixConfiguration.isCreateHomeDirectory()) {
             useraddCommand.append(CREATE_HOME_DIR_OPTION).append(" ");
         }

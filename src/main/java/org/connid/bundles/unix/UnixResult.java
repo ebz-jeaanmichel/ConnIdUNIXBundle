@@ -1,5 +1,6 @@
 package org.connid.bundles.unix;
 
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConfigurationException;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
@@ -34,48 +35,61 @@ public class UnixResult {
 	}
 	
 	
-	public void checkResult(Operation operation){
+	public void checkResult(Operation operation, String message, Log log){
 		if (getExitStatus() == 0){
 			return;
 		}
+		String errorDescription = message+": " + getErrorMessage();
 		switch(getExitStatus()){
         case 4:
         	if (operation == Operation.PASSWD){
-        		throw new ConnectorException("Could not change password: " + getErrorMessage());
+        		log.error(errorDescription);
+        		throw new ConnectorException(errorDescription);
         	} else if (operation == Operation.GROUPMOD){
-        		throw new UnknownUidException("Could not update group: " + getErrorMessage());
+        		log.error(errorDescription);
+        		throw new UnknownUidException(errorDescription);
         	}
         case 9:
-        	throw new AlreadyExistsException("Could not create account: " + getErrorMessage());
+        	log.error(errorDescription);
+        	throw new AlreadyExistsException(errorDescription);
         case 2:
         	if (operation == Operation.GETENET){
-        		throw new UnknownUidException("Could not find entry: " + getErrorMessage());
+        		log.error(errorDescription);
+        		throw new UnknownUidException(errorDescription);
         	}
         case 3:
-        	throw new ConfigurationException("Could not create account: " + getErrorMessage());
+        	log.error(errorDescription);
+        	throw new ConfigurationException(errorDescription);
         case 1:
         	if (operation == Operation.PASSWD || operation == Operation.USERMOD){
-        		throw new PermissionDeniedException("Could not change password: " + getErrorMessage());
+        		log.error(errorDescription);
+        		throw new PermissionDeniedException(errorDescription);
         	} else if (operation == Operation.USERDEL || operation == Operation.GETENET){
-        		throw new ConfigurationException("Could not delete user: " + getErrorMessage());
+        		log.error(errorDescription);
+        		throw new ConfigurationException(errorDescription);
         	}
         case 6:
         	if (operation == Operation.PASSWD){
-        		throw new ConfigurationException("Could not change password: " + getErrorMessage());
+        		log.error(errorDescription);
+        		throw new ConfigurationException(errorDescription);
         	} else if (operation == Operation.USERMOD || operation == Operation.GROUPMOD || operation == Operation.GROUPDEL || operation == Operation.USERDEL){
-        		throw new UnknownUidException("Could not update account: " + getErrorMessage());
+        		log.error(errorDescription);
+        		throw new UnknownUidException(errorDescription);
         	}
         case 8:
 //    		LOG.error("Could not delete user. Probably logged in?");
-    		throw new PermissionDeniedException("Could not delete user. " + getErrorMessage()); //USERDEL
+        	log.error(errorDescription);
+    		throw new PermissionDeniedException(errorDescription); //USERDEL
         case 5:
         	if (operation == Operation.PASSWD){
-        		throw new ConnectionBrokenException("Could not change password: " + getErrorMessage()); //PASSWD
+        		log.error(errorDescription);
+        		throw new ConnectionBrokenException(errorDescription); //PASSWD
         	}
         case 10:
         case 12:
         case 14:
-        	throw new ConnectorException("Could not create user: " + getErrorMessage());
+        	log.error(errorDescription);
+        	throw new ConnectorException(errorDescription);
         }
 	}
 

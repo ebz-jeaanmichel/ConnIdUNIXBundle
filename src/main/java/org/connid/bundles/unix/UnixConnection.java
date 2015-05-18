@@ -93,11 +93,11 @@ public class UnixConnection {
             fromServer = execChannel.getInputStream();
             errorStream = execChannel.getErrStream();
         }
-        LOG.info("Command to execute: " + command);
+        LOG.ok("Command to execute: " + command);
         execChannel.setCommand(command);
         execChannel.connect(unixConfiguration.getSshConnectionTimeout());
         sleep(1000);
-        LOG.info("Reading output");
+        LOG.ok("Reading output");
         return readOutput();
     }
     
@@ -111,20 +111,19 @@ public class UnixConnection {
             fromServer = execChannel.getInputStream();
             errorStream = execChannel.getErrStream();
         }
-        ChannelShell shellChannel = (ChannelShell) session.openChannel("shell");
-        LOG.info("Command to execute: " + command);
+        LOG.ok("Command to execute: " + command);
         execChannel.setCommand(command);
         execChannel.setPty(true);
         execChannel.connect();
+        sleep(1000);
         OutputStream out = execChannel.getOutputStream();
         if (StringUtil.isNotBlank(password)){
-        	sleep(1500);
         	out.write((password+"\n").getBytes());
         	out.flush();
-        	sleep(1500);
+        	sleep(100);
         	out.write((password+"\n").getBytes());
         	out.flush();
-        	sleep(1500);
+        	sleep(100);
         }
         
         return readOutput();
@@ -142,7 +141,7 @@ public class UnixConnection {
         }
         }
         if (execChannel.isClosed()) {
-            LOG.info("exit-status: " + execChannel.getExitStatus());
+            LOG.ok("exit-status: " + execChannel.getExitStatus());
         }
         
         StringBuilder errorMessage = new StringBuilder();
@@ -155,8 +154,7 @@ public class UnixConnection {
         }
         
         sleep(1000);
-        LOG.info("buffer "+ buffer.toString());
-        LOG.info("error buffer "+ errorMessage.toString());
+        LOG.ok("buffer "+ buffer.toString());
         
         return new UnixResult(execChannel.getExitStatus(), errorMessage.toString(), buffer.toString());
     }

@@ -75,12 +75,12 @@ public class UnixDelete {
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
 			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator()
 					.deleteUser(uid.getUidValue()));
-			result.checkResult(Operation.USERDEL);
+			result.checkResult(Operation.USERDEL, "Could not delete user", LOG);
 			LOG.info("User deleted successfully");
 		} else if (objectClass.equals(ObjectClass.GROUP)) {
 			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().deleteGroup(
 					uid.getUidValue()));
-			result.checkResult(Operation.GROUPDEL);
+			result.checkResult(Operation.GROUPDEL, "Could not delete group", LOG);
 
 		}
 	}

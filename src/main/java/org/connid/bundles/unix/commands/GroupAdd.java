@@ -15,6 +15,10 @@
  */
 package org.connid.bundles.unix.commands;
 
+import java.util.Set;
+
+import org.identityconnectors.framework.common.objects.Attribute;
+
 public class GroupAdd {
 
     /**
@@ -24,13 +28,18 @@ public class GroupAdd {
      */
     private static final String GROUPADD_COMMAND = "groupadd";
     private String groupname = "";
+    private Set<Attribute> attributes;
 
-    public GroupAdd(final String groupname) {
+    public GroupAdd(final String groupname, Set<Attribute> attributes) {
         this.groupname = groupname;
+        this.attributes = attributes;
     }
 
     private String createGroupAddCommand() {
-        return GROUPADD_COMMAND + " " + groupname;
+    	StringBuilder groupaddCommand = new StringBuilder(GROUPADD_COMMAND);
+    	groupaddCommand.append(" ").append(OptionBuilder.buildGroupCommandOptions(attributes, true));
+    	groupaddCommand.append(groupname);
+        return groupaddCommand.toString();
     }
 
     public String groupadd() {

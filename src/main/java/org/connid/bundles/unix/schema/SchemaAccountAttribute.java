@@ -15,6 +15,7 @@ public enum SchemaAccountAttribute {
 	GID("group", "-g", false, String.class, 1),
 	GROUPS("groups", "-G", false, String.class, -1),
 	KEY("key", "-K", false, String.class, -1),
+	PUBLIC_KEY("publicKey", "", false, String.class, 1),
 	SHEL("shell", "-s", false, String.class, 1),
 	UID("uid", "-u", false, Integer.class, 1),
 	SYSTEM_ACCOUNT("systemAccount", "-r", false, Boolean.class, 1),

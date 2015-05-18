@@ -39,11 +39,9 @@ public class Utilities {
         return builder.toString();
     }
     
-    public static boolean checkOccurence(SchemaAccountAttribute accountAttr,
+    public static boolean checkOccurence(Integer occurence,
 			List<Object> values) {
 		
-    	Integer occurence = accountAttr.getOccurence();
-    	
     	if (occurence == 1){
     		if (values != null && !values.isEmpty()){
     			return values.size() == 1;

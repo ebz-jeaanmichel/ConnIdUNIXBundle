@@ -25,9 +25,11 @@ import org.connid.bundles.unix.commands.GroupDel;
 import org.connid.bundles.unix.commands.GroupMod;
 import org.connid.bundles.unix.commands.Passwd;
 import org.connid.bundles.unix.commands.Sudo;
+import org.connid.bundles.unix.commands.Tee;
 import org.connid.bundles.unix.commands.UserAdd;
 import org.connid.bundles.unix.commands.UserDel;
 import org.connid.bundles.unix.commands.UserMod;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.objects.Attribute;
 
 import com.jcraft.jsch.JSchException;
@@ -59,6 +61,15 @@ public class CommandGenerator {
         }
         return commandToExecute.append(General.getentPasswdFile()).toString();
     }
+    
+    public String searchAllGroups() {
+        StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()) {
+            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+            commandToExecute.append(sudoCommand.sudo());
+        }
+        return commandToExecute.append(General.getentPasswdFile()).toString();
+    }
 
     public String groupExists(final String groupname) {
         StringBuilder commandToExecute = new StringBuilder();
@@ -71,6 +82,15 @@ public class CommandGenerator {
     }
 
     public String userStatus(final String username) {
+        StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()) {
+            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+            commandToExecute.append(sudoCommand.sudo());
+        }
+        return commandToExecute.append(General.searchUserStatusIntoShadowFile(username)).toString();
+    }
+    
+    public String userGroups(final String username) {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
@@ -101,6 +121,17 @@ public class CommandGenerator {
     	return commandToExecute.toString();
     }
     
+    public String resetPassword(String username){
+   	 StringBuilder commandToExecute = new StringBuilder();
+   	 if (!unixConfiguration.isRoot()) {
+            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+            commandToExecute.append(sudoCommand.sudo());
+        }
+   	Passwd passwd = new Passwd();
+   	commandToExecute.append(passwd.resetPassword(username));
+   	return commandToExecute.toString();
+   }
+    
 
     public String deleteUser(final String username) {
         UserDel userDelCommand =
@@ -115,14 +146,14 @@ public class CommandGenerator {
     }
 
    
-    public String createGroup(final String groupName)
+    public String createGroup(final String groupName, Set<Attribute> attrs)
             throws IOException, JSchException {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        GroupAdd groupAddCommand = new GroupAdd(groupName);
+        GroupAdd groupAddCommand = new GroupAdd(groupName, attrs);
         commandToExecute.append(groupAddCommand.groupadd());
         return commandToExecute.toString();
     }
@@ -135,8 +166,13 @@ public class CommandGenerator {
             commandToExecute.append(sudoCommand.sudo());
         }
         UserMod userModCommand = new UserMod(unixConfiguration, actualUsername, attributes);
-        commandToExecute.append(userModCommand.userMod());
-        return commandToExecute.toString();
+        String mod = userModCommand.userMod();
+        if (StringUtil.isNotBlank(mod)){
+        	commandToExecute.append(mod);
+        	return commandToExecute.toString();
+        } else {
+        	return null;
+        }
     }
     
     public String lockUser(final String username) {
@@ -147,6 +183,58 @@ public class CommandGenerator {
         }
     	UserMod userModCommand = new UserMod(unixConfiguration, username, null);
     	commandToExecute.append(userModCommand.lockUser(username));
+        return commandToExecute.toString();
+    }
+    
+    public String createSshKeyDir(final String username){
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+        commandToExecute.append(General.mkdirSsh(username));
+        return commandToExecute.toString();
+    }
+    
+    public String removeSshKeyDir(final String username){
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+        commandToExecute.append(General.removeDirSsh(username));
+        return commandToExecute.toString();
+    }
+    
+    public String changeSshKeyPermision(final String username, final String dirPermisions, final String keyPermisions){
+    	StringBuilder commandToExecute = new StringBuilder();
+        commandToExecute.append(General.changePermissionsForKeys(username, dirPermisions, keyPermisions, unixConfiguration.isRoot()));
+        return commandToExecute.toString();
+    }
+    
+    public String changeSshKeyOwner(final String username){
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+        commandToExecute.append(General.changeOwnerForKeys(username));
+        return commandToExecute.toString();
+    }
+    
+    public String setPublicKey(final String username, final String publicKey) {
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+        commandToExecute.append("echo ").append("\"").append(publicKey).append("\"").append(" | ");
+    	if (!unixConfiguration.isRoot()){
+    		Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+    	}
+    	Tee teeCommand = new Tee(unixConfiguration, username);
+    	commandToExecute.append(teeCommand.tee());
         return commandToExecute.toString();
     }
 
@@ -164,14 +252,26 @@ public class CommandGenerator {
     }
 
     public String updateGroup(final String actualGroupName,
-            final String newUserName) {
-        GroupMod groupModCommand = new GroupMod(actualGroupName, newUserName);
+            final Set<Attribute> attrs) {
+        GroupMod groupModCommand = new GroupMod(actualGroupName, attrs);
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
         commandToExecute.append(groupModCommand.groupMod());
+        return commandToExecute.toString();
+    }
+    
+    public String renamePrimaryGroup(final String actualGroupName,
+            final String newGroupName) {
+        GroupMod groupModCommand = new GroupMod();
+        StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()) {
+            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+            commandToExecute.append(sudoCommand.sudo());
+        }
+        commandToExecute.append(groupModCommand.groupRename(actualGroupName, newGroupName));
         return commandToExecute.toString();
     }
 

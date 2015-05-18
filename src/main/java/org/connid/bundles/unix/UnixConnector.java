@@ -18,15 +18,19 @@ package org.connid.bundles.unix;
 import com.jcraft.jsch.JSchException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.connid.bundles.unix.methods.UnixAuthenticate;
 import org.connid.bundles.unix.methods.UnixCreate;
 import org.connid.bundles.unix.methods.UnixDelete;
 import org.connid.bundles.unix.methods.UnixExecuteQuery;
+import org.connid.bundles.unix.methods.UnixSchema;
 import org.connid.bundles.unix.methods.UnixTest;
 import org.connid.bundles.unix.methods.UnixUpdate;
 import org.connid.bundles.unix.search.Operand;
+import org.connid.bundles.unix.search.Operator;
 import org.connid.bundles.unix.sshmanagement.CommandGenerator;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -41,8 +45,8 @@ import org.identityconnectors.framework.spi.operations.*;
 
 @ConnectorClass(configurationClass = UnixConfiguration.class,
 displayNameKey = "unix.connector.display")
-public class UnixConnector implements Connector, CreateOp, UpdateOp,
-        DeleteOp, TestOp, SearchOp<Operand>, AuthenticateOp, SchemaOp {
+public class UnixConnector implements Connector, CreateOp, UpdateOp, 
+        DeleteOp, TestOp, SearchOp<Operand>, AuthenticateOp, SchemaOp, ResolveUsernameOp, UpdateAttributeValuesOp {
 
     private static final Log LOG = Log.getLog(UnixConnector.class);
 
@@ -134,7 +138,7 @@ public class UnixConnector implements Connector, CreateOp, UpdateOp,
     @Override
     public final Uid update(final ObjectClass oc, final Uid uid, final Set<Attribute> set, final OperationOptions oo) {
         try {
-            new UnixUpdate(oc, unixConfiguration, uid, set).update();
+            return new UnixUpdate(oc, unixConfiguration, uid, set).update();
         } catch (IOException ex) {
             LOG.error("Error in connection process", ex);
         } catch (JSchException ex) {
@@ -166,7 +170,47 @@ public class UnixConnector implements Connector, CreateOp, UpdateOp,
 
 	@Override
 	public Schema schema() {
-		// TODO Auto-generated method stub
-		return null;
+		return new UnixSchema().buildSchema();
+	}
+
+	@Override
+	public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
+
+		final List<Uid> uids = new ArrayList<Uid>();
+		executeQuery(objectClass, new Operand(Operator.EQ, Name.NAME, username, false), new ResultsHandler() {
+			
+			@Override
+			public boolean handle(ConnectorObject obj) {
+				return uids.add(obj.getUid());
+			}
+		}, null);
+		
+		if (uids.isEmpty()){
+			throw new IllegalStateException("Could not resolve username. No user with given username: "+username+" found");
+		}
+		
+		if (uids.size() > 1){
+			throw new IllegalArgumentException("Foud more than one user with username: " + username);
+		}
+		
+		return uids.get(0);
+	}
+
+	@Override
+	public Uid addAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToAdd, OperationOptions options) {
+		return update(objclass, uid, valuesToAdd, options);
+	}
+
+	@Override
+	public Uid removeAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToRemove,
+			OperationOptions options) {
+		 try {
+	            new UnixUpdate(objclass, unixConfiguration, uid, valuesToRemove).removeAttributes();
+	        } catch (IOException ex) {
+	            LOG.error("Error in connection process", ex);
+	        } catch (JSchException ex) {
+	            LOG.error("Error in connection process", ex);
+	        }
+	        return uid;
 	}
 }

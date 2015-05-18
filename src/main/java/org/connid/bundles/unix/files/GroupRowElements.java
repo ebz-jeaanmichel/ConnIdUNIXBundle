@@ -15,19 +15,16 @@
  */
 package org.connid.bundles.unix.files;
 
-public enum PasswdRowElements {
+public enum GroupRowElements {
 
-    USERNAME(0),
+    GROUPNAME(0),
     PASSWORD_VALIDATOR(1),
-    USER_IDENTIFIER(2),
-    GROUP_IDENTIFIER(3),
-    COMMENT(4),
-    HOME_DIRECTORY(5),
-    SHELL(6);
-  
+    GROUP_IDENTIFIER(2),
+    USERS(3); //probably will be not used
+    
     private int code;
 
-    private PasswdRowElements(int c) {
+    private GroupRowElements(int c) {
         code = c;
     }
 

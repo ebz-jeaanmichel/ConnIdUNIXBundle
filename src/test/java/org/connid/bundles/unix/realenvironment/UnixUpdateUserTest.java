@@ -51,13 +51,27 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test
     public final void updateAndAuthenticateWithNewPassword() {
+    	printTestTitle("updateAndAuthenticateWithNewPassword");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), ACTIVE_USER),
                 null);
         Assert.assertEquals(name.getNameValue(), newAccount.getUidValue());
         connector.update(ObjectClass.ACCOUNT, newAccount,
-                createSetOfAttributes(name, attrs.getNewPassword(),
-                ACTIVE_USER), null);
+                createSetOfAttributes(name, attrs.getNewPassword(), ACTIVE_USER), null);
+        final Uid authUid = connector.authenticate(ObjectClass.ACCOUNT, name.getNameValue(),
+                attrs.getNewGuardedPassword(), null);
+        Assert.assertEquals(newAccount.getUidValue(), authUid.getUidValue());
+    }
+    
+    @Test
+    public final void updateOnlyPassword() {
+    	printTestTitle("updateOnlyPassword");
+        newAccount = connector.create(ObjectClass.ACCOUNT,
+                createSetOfAttributes(name, attrs.getPassword(), ACTIVE_USER),
+                null);
+        Assert.assertEquals(name.getNameValue(), newAccount.getUidValue());
+        connector.update(ObjectClass.ACCOUNT, newAccount,
+                createPasswordChange(attrs.getNewPassword()), null);
         final Uid authUid = connector.authenticate(ObjectClass.ACCOUNT, name.getNameValue(),
                 attrs.getNewGuardedPassword(), null);
         Assert.assertEquals(newAccount.getUidValue(), authUid.getUidValue());
@@ -65,6 +79,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test
     public final void updateAndAuthenticateWithNewUsernameAndNewPassword() {
+    	printTestTitle("updateAndAuthenticateWithNewUsernameAndNewPassword");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),
                 ACTIVE_USER), null);
@@ -81,6 +96,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test
     public final void updateLockedUser() {
+    	printTestTitle("updateLockedUser");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),
                 INACTIVE_USER), null);
@@ -95,6 +111,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
 //    @Test(expected = ConnectorException.class)
     public final void updateUnlockedUser() {
+    	printTestTitle("updateUnlockedUser");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),
                 ACTIVE_USER), null);
@@ -109,6 +126,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public final void updateAndAuthenticateWithOldPassword() {
+    	printTestTitle("updateAndAuthenticateWithOldPassword");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),
                 ACTIVE_USER), null);
@@ -122,6 +140,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public final void updateNotExistsUser() {
+    	printTestTitle("updateNotExistsUser");
         connector.update(ObjectClass.ACCOUNT, new Uid(attrs.getWrongUsername()),
                 createSetOfAttributes(name, attrs.getNewPassword(),
                 ACTIVE_USER), null);
@@ -129,7 +148,8 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public void updateWithWrongObjectClass() {
-        newAccount = connector.create(ObjectClass.ACCOUNT,
+    	printTestTitle("updateWithWrongObjectClass");
+    	newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),
                 ACTIVE_USER), null);
         connector.update(attrs.getWrongObjectClass(), newAccount,
@@ -139,6 +159,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public void updateWithNullObjectClass() {
+    	printTestTitle("updateWithNullObjectClass");
         connector.update(null, newAccount,
                 createSetOfAttributes(name, attrs.getNewPassword(),
                 ACTIVE_USER), null);
@@ -146,6 +167,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public void updateWithNullUid() {
+    	printTestTitle("updateWithNullUid");
         connector.update(ObjectClass.ACCOUNT, null,
                 createSetOfAttributes(name, attrs.getNewPassword(),
                 ACTIVE_USER), null);
@@ -153,6 +175,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public void updateWithNullSet() {
+    	printTestTitle("updateWithNullSet");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),
                 ACTIVE_USER), null);
@@ -161,6 +184,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = IllegalArgumentException.class)
     public void updateWithNullPwd() {
+    	printTestTitle("updateWithNullPwd");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),
                 ACTIVE_USER), null);
@@ -170,6 +194,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public void updateWithNullUsername() {
+    	printTestTitle("updateWithNullUsername");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(),
                 ACTIVE_USER), null);
@@ -180,6 +205,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public void updateWithAllNull() {
+    	printTestTitle("updateWithAllNull");
         connector.update(null, null, null, null);
     }
 

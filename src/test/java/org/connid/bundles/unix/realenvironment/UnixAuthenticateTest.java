@@ -15,12 +15,20 @@
  */
 package org.connid.bundles.unix.realenvironment;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.connid.bundles.unix.UnixConnector;
+import org.connid.bundles.unix.search.Operand;
+import org.connid.bundles.unix.search.Operator;
 import org.connid.bundles.unix.utilities.AttributesTestValue;
 import org.connid.bundles.unix.utilities.SharedTestMethods;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.After;
 import org.junit.Assert;
@@ -54,6 +62,15 @@ public class UnixAuthenticateTest extends SharedTestMethods {
                 attrs.getGuardedPassword(), null);
         Assert.assertEquals(newAccount.getUidValue(), authUid.getUidValue());
         connector.delete(ObjectClass.ACCOUNT, newAccount, null);
+    }
+    
+    @Test
+    public final void authenticateTechUserTest() {
+    	
+    	final Uid authUid = connector.authenticate(ObjectClass.ACCOUNT, "midpoint",
+                new GuardedString("secret".toCharArray()), null);
+        Assert.assertEquals("midpoint", authUid.getUidValue());
+//        connector.delete(ObjectClass.ACCOUNT, newAccount, null);
     }
 
     @Test(expected = ConnectorException.class)

@@ -15,23 +15,33 @@
  */
 package org.connid.bundles.unix.files;
 
-public enum PasswdRowElements {
+public class GroupRow {
 
-    USERNAME(0),
-    PASSWORD_VALIDATOR(1),
-    USER_IDENTIFIER(2),
-    GROUP_IDENTIFIER(3),
-    COMMENT(4),
-    HOME_DIRECTORY(5),
-    SHELL(6);
-  
-    private int code;
-
-    private PasswdRowElements(int c) {
-        code = c;
+    private String groupname = "";
+    private String passwordValidator = "";
+    private String groupIdentifier = "";
+    
+    public String getGroupIdentifier() {
+        return groupIdentifier;
     }
 
-    public int getCode() {
-        return code;
+    public void setGroupIdentifier(String groupIdentifier) {
+        this.groupIdentifier = groupIdentifier;
     }
+
+    public String getPasswordValidator() {
+        return passwordValidator;
+    }
+
+    public void setPasswordValidator(String passwordValidator) {
+        this.passwordValidator = passwordValidator;
+    }
+
+    public String getGroupname() {
+		return groupname;
+	}
+    
+    public void setGroupname(String groupname) {
+		this.groupname = groupname;
+	}
 }

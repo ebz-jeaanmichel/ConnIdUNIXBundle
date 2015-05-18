@@ -7,8 +7,10 @@ import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
 import org.connid.bundles.unix.UnixResult.Operation;
+import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
@@ -17,31 +19,76 @@ import com.jcraft.jsch.JSchException;
 
 public class UnixCommon {
 	
-	public static void processPassword(UnixConnection unixConnection, String username, Set<Attribute> attrs) throws JSchException, IOException{
-		final String password = Utilities.getPlainPassword(
-	            AttributeUtil.getPasswordValue(attrs));
+	private static final Log LOG = Log.getLog(UnixCommon.class);
 	
-		if (StringUtil.isNotBlank(password)){
-		UnixResult result = unixConnection.execute(
-				UnixConnector.getCommandGenerator().setPassword(username, password), password);
+	public static void processPassword(UnixConnection unixConnection, String username, Set<Attribute> attrs)
+			throws JSchException, IOException {
+		final String password = Utilities.getPlainPassword(AttributeUtil.getPasswordValue(attrs));
 
-		result.checkResult(Operation.PASSWD);
+		if (StringUtil.isNotBlank(password)) {
+			UnixResult result = unixConnection.execute(
+					UnixConnector.getCommandGenerator().setPassword(username, password), password);
+
+			result.checkResult(Operation.PASSWD, "Could not set password", LOG);
+		}
+
 	}
 
+	
+	public static void resetPassword(UnixConnection unixConnection, String username) throws JSchException, IOException {
+
+		UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().resetPassword(username));
+
+		result.checkResult(Operation.PASSWD, "Could not reset password", LOG);
+
+	}
+
+	public static void appendCommand(StringBuilder commandBuilder, String command){
+		if (StringUtil.isBlank(command)){
+			return;
+		}
+		if (StringUtil.isNotBlank(commandBuilder.toString())){
+			commandBuilder.append(" && ");
+			commandBuilder.append(command);
+		} else {
+			commandBuilder.append(command);
+		}
 	}
 	
-	public static void processActivation(UnixConnection unixConnection, String username, Set<Attribute> attrs) throws JSchException, IOException{
+	public static void appendCreateOrUpdatePublicKeyCommand(StringBuilder commandBuilder, String username, Set<Attribute> attrs, boolean isUpdate){
+		Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
+		if (publiKey != null && publiKey.getValue() != null && !publiKey.getValue().isEmpty()){
+			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().createSshKeyDir(username));
+			if (isUpdate){
+				appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "777", "777"));
+			}
+			String pubKeyCommand = UnixConnector.getCommandGenerator().setPublicKey(username, (String) publiKey.getValue().get(0));
+			appendCommand(commandBuilder, pubKeyCommand);
+			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "700", "600"));
+			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyOwner(username));
+		}
+	}
+	
+	public static void appendDeletePublicKeyCommand(StringBuilder commandBuilder, String username, Set<Attribute> attrs){
+		Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
+		if (publiKey != null && publiKey.getValue() != null && !publiKey.getValue().isEmpty()){
+			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().removeSshKeyDir(username));
+		}
+	}
+	
+	public static String buildActivationCommand(UnixConnection unixConnection, String username, Set<Attribute> attrs) throws JSchException, IOException{
 		Attribute status = AttributeUtil.find(OperationalAttributes.ENABLE_NAME, attrs);
 		if (status != null && status.getValue() != null && !status.getValue().isEmpty()){
 			boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
 			UnixResult result;
 			if (!statusValue) {
-				result = unixConnection.execute(UnixConnector.getCommandGenerator().lockUser(username));
-				result.checkResult(Operation.USERMOD);
+				return UnixConnector.getCommandGenerator().lockUser(username);
+//				result.checkResult(Operation.USERMOD);
 			} else {
-				result = unixConnection.execute(UnixConnector.getCommandGenerator().unlockUser(username));
-				result.checkResult(Operation.USERMOD);
+				return UnixConnector.getCommandGenerator().unlockUser(username);
+				
 			}
 		}
+		return null;
 	}
 }

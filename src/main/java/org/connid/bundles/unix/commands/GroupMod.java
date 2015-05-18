@@ -15,6 +15,11 @@
  */
 package org.connid.bundles.unix.commands;
 
+import java.util.Set;
+
+import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.framework.common.objects.Attribute;
+
 public class GroupMod {
 
     /**
@@ -29,18 +34,35 @@ public class GroupMod {
     private static final String NEW_NAME_OPTION = "-n";
     private String groupName = "";
     private String newGroupName = "";
+    Set<Attribute> attrs = null;
 
-    public GroupMod(final String groupName, final String newGroupName) {
+    public GroupMod() {
+	}
+    
+    public GroupMod(final String groupName, final Set<Attribute> attrs) {
         this.groupName = groupName;
-        this.newGroupName = newGroupName;
+        this.attrs = attrs;
     }
 
     private String createGroupModCommand() {
-        return GROUPMOD_COMMAND + " " + NEW_NAME_OPTION + " " + newGroupName
-                + " " + groupName;
+    	 StringBuilder groupmodCommand = new StringBuilder(GROUPMOD_COMMAND);
+         String attributeCommand = OptionBuilder.buildGroupCommandOptions(attrs, false);
+         if (StringUtil.isNotBlank(attributeCommand)){
+        	 groupmodCommand.append(" ").append(attributeCommand);
+        	 groupmodCommand.append(groupName);
+              return groupmodCommand.toString();
+         }
+         
+         return null; 
     }
 
     public String groupMod() {
         return createGroupModCommand();
+    }
+    
+    public String groupRename(String actualName, String newName) {
+    	StringBuilder renameCommand = new StringBuilder(GROUPMOD_COMMAND);
+    	renameCommand.append(" -n").append(newName).append(" ").append(actualName);
+        return renameCommand.toString();
     }
 }

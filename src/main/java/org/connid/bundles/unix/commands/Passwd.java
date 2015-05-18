@@ -23,12 +23,7 @@ public class Passwd {
      */
     private static final String PASSWD_COMMAND = "passwd";
     
-    private static final String CHPASSWD_COMMAND = "chpasswd";
-    /**
-     * This option is used to indicate that passwd should read the new password
-     * from standard input, which can be a pipe.
-     */
-    private static final String READ_PASSWORD_FROM_STDIN = "--stdin";
+    private static final String REMOVE_PASSWD_COMMAND = "passwd -d";
     /**
      * This option is used to lock the specified account and it is available to
      * root only. The locking is performed by rendering the encrypted password
@@ -55,6 +50,12 @@ public class Passwd {
     public String setPassword(final String username,
             final String password) {
         return createChangeUserPasswordCommand(username, password);
+    }
+    
+    public String resetPassword(final String username) {
+        StringBuilder removePassword = new StringBuilder();
+        removePassword.append(REMOVE_PASSWD_COMMAND).append(" ").append(username);
+        return removePassword.toString();
     }
 
     public String lockUser(final String username) {

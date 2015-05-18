@@ -77,20 +77,33 @@ public class UnixCreate {
 			throw new IllegalArgumentException("No Name attribute provided in the attributes");
 		}
 
-		String username = name.getNameValue();
+		String objectName = name.getNameValue();
 
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
-			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().createUser(username, attrs));
-			result.checkResult(Operation.USERADD);
+			StringBuilder commandToExecute = new StringBuilder();
+			String addCommand = UnixConnector.getCommandGenerator().createUser(objectName, attrs);
+			UnixCommon.appendCommand(commandToExecute, addCommand);
+			
+			UnixCommon.appendCreateOrUpdatePublicKeyCommand(commandToExecute, objectName, attrs, false);
+			
+			UnixResult result = unixConnection.execute(commandToExecute.toString());
+			result.checkResult(Operation.USERADD, "Could not create user", LOG);
 
-			UnixCommon.processPassword(unixConnection, username, attrs);
-			UnixCommon.processActivation(unixConnection, username, attrs);
+			UnixCommon.processPassword(unixConnection, objectName, attrs);
+			processActivation(UnixCommon.buildActivationCommand(unixConnection, objectName, attrs));
 
 		} else if (objectClass.equals(ObjectClass.GROUP)) {
-			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().createGroup(username));
-			result.checkResult(Operation.GROUPADD);
+			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().createGroup(objectName, attrs));
+			result.checkResult(Operation.GROUPADD, "Could not create group", LOG);
 		}
 
-		return new Uid(username);
+		return new Uid(objectName);
+	}
+	
+	private void processActivation(String activationCommand) throws JSchException, IOException{
+		if (StringUtil.isNotBlank(activationCommand)){
+			UnixResult result = unixConnection.execute(activationCommand);
+			result.checkResult(Operation.USERMOD, "Could not change user activation status", LOG);
+		}
 	}
 }

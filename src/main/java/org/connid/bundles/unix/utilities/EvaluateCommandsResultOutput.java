@@ -15,6 +15,14 @@
  */
 package org.connid.bundles.unix.utilities;
 
+import groovyjarjarantlr.StringUtils;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.connid.bundles.unix.files.GroupRow;
+import org.connid.bundles.unix.files.GroupRowElements;
 import org.connid.bundles.unix.files.PasswdRow;
 import org.connid.bundles.unix.files.PasswdRowElements;
 import org.identityconnectors.common.StringUtil;
@@ -28,7 +36,7 @@ public class EvaluateCommandsResultOutput {
 
     public static PasswdRow toPasswdRow(
             final String commandResult) {
-        String[] userValues = commandResult.split(":");
+        String[] userValues = commandResult.split(":", 7);
         PasswdRow passwdRow = new PasswdRow();
         if (userValues.length == PasswdRowElements.values().length) {
             passwdRow.setUsername(userValues[
@@ -48,6 +56,23 @@ public class EvaluateCommandsResultOutput {
         }
         return passwdRow;
     }
+    
+    public static GroupRow toGroupRow(
+            final String commandResult) {
+
+        String[] userValues = commandResult.split(":", 4);
+        GroupRow groupRow = new GroupRow();
+        if (userValues.length >= GroupRowElements.values().length) {
+        	groupRow.setGroupname(userValues[
+                    GroupRowElements.GROUPNAME.getCode()]);
+        	groupRow.setPasswordValidator(userValues[
+                    GroupRowElements.PASSWORD_VALIDATOR.getCode()]);
+        	groupRow.setGroupIdentifier(userValues[
+                    GroupRowElements.GROUP_IDENTIFIER.getCode()]);
+        	
+        }
+        return groupRow;
+    }
 
     public static boolean evaluateUserStatus(
             final String commandResult) {
@@ -58,5 +83,20 @@ public class EvaluateCommandsResultOutput {
             userStatus = !values[1].startsWith("!");
         }
         return userStatus;
+    }
+    
+    public static List<String> evaluateUserGroups(String commandResult){
+    	if (StringUtil.isNotBlank(commandResult)){
+    		String[] values = commandResult.split(" ");
+    		if (values != null && values.length != 0){
+    			List<String> groups = new ArrayList<String>();
+    			for (int i = 2; i < values.length - 1; i++){
+    				groups.add(values[i]);
+    			}
+    			return groups;
+    		}
+    		
+    	}
+    	return null;
     }
 }
