@@ -90,7 +90,7 @@ public class UnixCreate {
 			result.checkResult(Operation.USERADD, "Could not create user", LOG);
 
 			UnixCommon.processPassword(unixConnection, objectName, attrs);
-			processActivation(UnixCommon.buildActivationCommand(unixConnection, objectName, attrs));
+			processActivation(objectName);
 
 		} else if (objectClass.equals(ObjectClass.GROUP)) {
 			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().createGroup(objectName, attrs));
@@ -100,9 +100,12 @@ public class UnixCreate {
 		return new Uid(objectName);
 	}
 	
-	private void processActivation(String activationCommand) throws JSchException, IOException{
-		if (StringUtil.isNotBlank(activationCommand)){
-			UnixResult result = unixConnection.execute(activationCommand);
+	private void processActivation(String username) throws JSchException, IOException{
+		StringBuilder activationCommand = new StringBuilder();
+		UnixCommon.appendCommand(activationCommand, UnixCommon.buildActivationCommand(unixConnection, username, attrs));
+		UnixCommon.appendCommand(activationCommand, UnixCommon.buildLockoutCommand(unixConnection, username, attrs));
+		if (StringUtil.isNotBlank(activationCommand.toString())){
+			UnixResult result = unixConnection.execute(activationCommand.toString());
 			result.checkResult(Operation.USERMOD, "Could not change user activation status", LOG);
 		}
 	}

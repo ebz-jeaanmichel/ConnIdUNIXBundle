@@ -78,6 +78,29 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
     }
 
     @Test
+    public final void searchUserDisabled() {
+    	printTestTitle(TEST_CLASS+"searchUserDisabled()");
+       
+        final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
+        connector.executeQuery(ObjectClass.ACCOUNT,
+                new Operand(
+                Operator.EQ, Uid.NAME, "a.nikolic", false),
+                new ResultsHandler() {
+
+                    @Override
+                    public boolean handle(final ConnectorObject connObj) {
+                        actual.add(connObj);
+                        return true;
+                    }
+                }, null);
+        for (ConnectorObject connObj : actual) {
+            assertEquals(false, connObj.getAttributeByName(OperationalAttributes.ENABLE_NAME).getValue().get(0));
+        }
+//        connector.delete(ObjectClass.ACCOUNT, newAccount, null);
+    }
+
+    
+    @Test
     public final void searchStartsWithAttribute() {
     	printTestTitle(TEST_CLASS+"searchStartsWithAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,

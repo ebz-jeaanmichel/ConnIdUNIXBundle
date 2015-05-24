@@ -16,6 +16,7 @@
 package org.connid.bundles.unix.sshmanagement;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
@@ -23,6 +24,7 @@ import org.connid.bundles.unix.commands.General;
 import org.connid.bundles.unix.commands.GroupAdd;
 import org.connid.bundles.unix.commands.GroupDel;
 import org.connid.bundles.unix.commands.GroupMod;
+import org.connid.bundles.unix.commands.OptionBuilder;
 import org.connid.bundles.unix.commands.Passwd;
 import org.connid.bundles.unix.commands.Sudo;
 import org.connid.bundles.unix.commands.Tee;
@@ -68,7 +70,7 @@ public class CommandGenerator {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        return commandToExecute.append(General.getentPasswdFile()).toString();
+        return commandToExecute.append(General.getentGroupFile()).toString();
     }
 
     public String groupExists(final String groupname) {
@@ -90,13 +92,22 @@ public class CommandGenerator {
         return commandToExecute.append(General.searchUserStatusIntoShadowFile(username)).toString();
     }
     
+    public String buildRemoveFromGroupsCommand(final String username, final List<Object> values){
+    	StringBuilder commandToExecute = new StringBuilder();
+    	if (!unixConfiguration.isRoot()) {
+            Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+            commandToExecute.append(sudoCommand.sudo());
+        }
+    	return commandToExecute.append(OptionBuilder.buildRemoveFromGroupsCommand(username, values)).toString();
+    }
+    
     public String userGroups(final String username) {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        return commandToExecute.append(General.searchUserStatusIntoShadowFile(username)).toString();
+        return commandToExecute.append(General.searchGroupsForUser(username)).toString();
     }
 
     public String createUser(String username, Set<Attribute> attributes) {
@@ -159,14 +170,14 @@ public class CommandGenerator {
     }
 
     public String updateUser(final String actualUsername,
-            Set<Attribute> attributes) {
+            Set<Attribute> attributes, boolean isAdd) {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
         UserMod userModCommand = new UserMod(unixConfiguration, actualUsername, attributes);
-        String mod = userModCommand.userMod();
+        String mod = userModCommand.userMod(isAdd);
         if (StringUtil.isNotBlank(mod)){
         	commandToExecute.append(mod);
         	return commandToExecute.toString();
@@ -183,6 +194,28 @@ public class CommandGenerator {
         }
     	UserMod userModCommand = new UserMod(unixConfiguration, username, null);
     	commandToExecute.append(userModCommand.lockUser(username));
+        return commandToExecute.toString();
+    }
+    
+    public String disableUser(final String username, final String disableDate) {
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+    	UserMod userModCommand = new UserMod(unixConfiguration, username, null);
+    	commandToExecute.append(userModCommand.disableUser(username, disableDate));
+        return commandToExecute.toString();
+    }
+    
+    public String enableUser(final String username) {
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+    	UserMod userModCommand = new UserMod(unixConfiguration, username, null);
+    	commandToExecute.append(userModCommand.enableUser(username));
         return commandToExecute.toString();
     }
     

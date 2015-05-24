@@ -15,10 +15,7 @@
  */
 package org.connid.bundles.unix.utilities;
 
-import groovyjarjarantlr.StringUtils;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.connid.bundles.unix.files.GroupRow;
@@ -62,7 +59,7 @@ public class EvaluateCommandsResultOutput {
 
         String[] userValues = commandResult.split(":", 4);
         GroupRow groupRow = new GroupRow();
-        if (userValues.length >= GroupRowElements.values().length) {
+        if (userValues.length == GroupRowElements.values().length) {
         	groupRow.setGroupname(userValues[
                     GroupRowElements.GROUPNAME.getCode()]);
         	groupRow.setPasswordValidator(userValues[
@@ -74,23 +71,44 @@ public class EvaluateCommandsResultOutput {
         return groupRow;
     }
 
-    public static boolean evaluateUserStatus(
-            final String commandResult) {
-        boolean userStatus = false;
-        if (commandResult != null && StringUtil.isNotBlank(commandResult)
-                && StringUtil.isNotEmpty(commandResult)) {
-            String[] values = commandResult.split(":");
-            userStatus = !values[1].startsWith("!");
+    public static boolean evaluateUserLockoutStatus(
+            final String lockoutAttr) {
+        if (StringUtil.isBlank(lockoutAttr)){
+        	return false;
         }
-        return userStatus;
+        if (lockoutAttr.startsWith("!")){
+        	return true;
+        }
+        return false;
+    
+    }
+    
+    public static boolean evaluateUserActivationStatus(
+            final String activationAttr) {
+        if (StringUtil.isBlank(activationAttr)){
+        	return true;
+        }
+        
+        return false;
+    }
+    
+    public static long evaluateDisableDate(
+            final String activationAttr) {
+        if (StringUtil.isBlank(activationAttr)){
+        	return 0;
+        }
+        
+        return Long.valueOf(activationAttr)*24*60*60*1000;
+        
     }
     
     public static List<String> evaluateUserGroups(String commandResult){
     	if (StringUtil.isNotBlank(commandResult)){
-    		String[] values = commandResult.split(" ");
+    		String results = StringUtil.stripNewlines(commandResult);
+    		String[] values = results.split(" ");
     		if (values != null && values.length != 0){
     			List<String> groups = new ArrayList<String>();
-    			for (int i = 2; i < values.length - 1; i++){
+    			for (int i = 0; i < values.length; i++){
     				groups.add(values[i]);
     			}
     			return groups;

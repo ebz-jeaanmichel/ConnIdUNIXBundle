@@ -73,8 +73,11 @@ public class UnixDelete {
 		}
 
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
-			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator()
-					.deleteUser(uid.getUidValue()));
+			StringBuilder commandToExecute = new StringBuilder();
+			String deleteUserCommand = UnixConnector.getCommandGenerator().deleteUser(uid.getUidValue());
+			UnixCommon.appendCommand(commandToExecute, deleteUserCommand);
+//			UnixCommon.appendCommand(commandToExecute, UnixConnector.getCommandGenerator().deleteGroup(uid.getUidValue()));
+			UnixResult result = unixConnection.execute(commandToExecute.toString());
 			result.checkResult(Operation.USERDEL, "Could not delete user", LOG);
 			LOG.info("User deleted successfully");
 		} else if (objectClass.equals(ObjectClass.GROUP)) {

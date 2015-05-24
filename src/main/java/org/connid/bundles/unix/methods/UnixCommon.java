@@ -1,6 +1,8 @@
 package org.connid.bundles.unix.methods;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Set;
 
 import org.connid.bundles.unix.UnixConnection;
@@ -76,8 +78,8 @@ public class UnixCommon {
 		}
 	}
 	
-	public static String buildActivationCommand(UnixConnection unixConnection, String username, Set<Attribute> attrs) throws JSchException, IOException{
-		Attribute status = AttributeUtil.find(OperationalAttributes.ENABLE_NAME, attrs);
+	public static String buildLockoutCommand(UnixConnection unixConnection, String username, Set<Attribute> attrs) throws JSchException, IOException{
+		Attribute status = AttributeUtil.find(OperationalAttributes.LOCK_OUT_NAME, attrs);
 		if (status != null && status.getValue() != null && !status.getValue().isEmpty()){
 			boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
 			UnixResult result;
@@ -91,4 +93,47 @@ public class UnixCommon {
 		}
 		return null;
 	}
+	
+	public static String buildActivationCommand(UnixConnection unixConnection, String username, Set<Attribute> attrs) throws JSchException, IOException{
+		Attribute status = AttributeUtil.find(OperationalAttributes.ENABLE_NAME, attrs);
+		if (!isEmpty(status)){
+			boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
+			UnixResult result;
+			if (!statusValue) {
+				Attribute validTo = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, attrs);
+				String formatedDate = null;
+				if (!isEmpty(validTo)){
+					formatedDate = formatDate((Long) validTo.getValue().get(0));
+				}
+				return UnixConnector.getCommandGenerator().disableUser(username, formatedDate);
+//				result.checkResult(Operation.USERMOD);
+			} else {
+				return UnixConnector.getCommandGenerator().enableUser(username);
+				
+			}
+		}
+		return null;
+	}
+	
+	private static String formatDate(long milis){
+		Date date = new Date(milis);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-DD");
+		return dateFormat.format(date);
+	}
+		
+		public static boolean isEmpty(Attribute attribute){
+			if (attribute == null){
+				return true;
+			}
+			
+			if (attribute.getValue() == null){
+				return true;
+			}
+			
+			if (attribute.getValue().isEmpty()){
+				return true;
+			}
+			
+			return false;
+		}
 }

@@ -15,6 +15,7 @@
  */
 package org.connid.bundles.unix.search;
 
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.Uid;
 
 public class Operand {
@@ -56,8 +57,9 @@ public class Operand {
         return attributeName;
     }
 
+    //UID and NAME are the same in this connector
     public final boolean isUid() {
-        return attributeName.equalsIgnoreCase(Uid.NAME);
+        return (attributeName.equalsIgnoreCase(Uid.NAME) || attributeName.equalsIgnoreCase(Name.NAME));
     }
 
     public final String getAttributeValue() {

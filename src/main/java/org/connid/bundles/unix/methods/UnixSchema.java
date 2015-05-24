@@ -47,7 +47,9 @@ public class UnixSchema {
 	         */
 	        attributes = new HashSet<AttributeInfo>();
 	        attributes.add(OperationalAttributeInfos.PASSWORD);
-	        
+	        attributes.add(OperationalAttributeInfos.ENABLE);
+	        attributes.add(OperationalAttributeInfos.LOCK_OUT);
+	        attributes.add(OperationalAttributeInfos.DISABLE_DATE);
 	        
 	        for (SchemaAccountAttribute attr : SchemaAccountAttribute.values()){
 	        	AttributeInfoBuilder attrBuilder = new AttributeInfoBuilder();

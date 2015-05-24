@@ -15,10 +15,9 @@
  */
 package org.connid.bundles.unix.search;
 
-import com.jcraft.jsch.JSchException;
-
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,19 +30,24 @@ import org.connid.bundles.unix.files.GroupFile;
 import org.connid.bundles.unix.files.GroupRow;
 import org.connid.bundles.unix.files.PasswdFile;
 import org.connid.bundles.unix.files.PasswdRow;
-import org.connid.bundles.unix.methods.UnixCreate;
 import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.schema.SchemaGroupAttribute;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationalAttributes;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
+
+import com.jcraft.jsch.JSchException;
 
 public class Search {
-	
+
 	private static final Log LOG = Log.getLog(Search.class);
-	
+
 	private UnixConnection unixConnection = null;
 
 	private Operand filter = null;
@@ -65,39 +69,43 @@ public class Search {
 
 	public void equalSearch() throws IOException, InterruptedException, JSchException {
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
-			
-			PasswdFile passwdFile= (filter.isUid() ? searchUserByUid() : searchAllUsers());
+
+			PasswdFile passwdFile = (filter.isUid() ? searchUserByUid() : searchAllUsers());
 			fillUserHandler(passwdFile.searchRowByAttribute(filter.getAttributeName(), filter.getAttributeValue(),
-						filter.isNot()));
+					filter.isNot()));
 		} else if (objectClass.equals(ObjectClass.GROUP)) {
 			GroupFile groupFile = (filter.isUid() ? searchGroupByUid() : searchAllGroups());
-			fillGroupHandler(groupFile.searchRowByAttribute(filter.getAttributeName(), filter.getAttributeValue(), filter.isNot()));
+			fillGroupHandler(groupFile.searchRowByAttribute(filter.getAttributeName(), filter.getAttributeValue(),
+					filter.isNot()));
 		}
 	}
 
 	private PasswdFile searchUserByUid() throws JSchException, IOException {
-		UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().userExists(filter.getAttributeValue()));
+		// unixConnection.openExecChannel();
+		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().userExists(
+				filter.getAttributeValue()));
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		PasswdFile passwdFile = new PasswdFile(getFileOutput(result.getOutput()));
 		return passwdFile;
 	}
-	
+
 	private PasswdFile searchAllUsers() throws JSchException, IOException {
-		UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().searchAllUser());
+		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllUser());
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		PasswdFile passwdFile = new PasswdFile(getFileOutput(result.getOutput()));
 		return passwdFile;
 	}
-	
+
 	private GroupFile searchAllGroups() throws JSchException, IOException {
-		UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().searchAllGroups());
+		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllGroups());
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		GroupFile passwdFile = new GroupFile(getFileOutput(result.getOutput()));
 		return passwdFile;
 	}
-	
+
 	private GroupFile searchGroupByUid() throws JSchException, IOException {
-		UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().groupExists(filter.getAttributeValue()));
+		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().groupExists(
+				filter.getAttributeValue()));
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		GroupFile passwdFile = new GroupFile(getFileOutput(result.getOutput()));
 		return passwdFile;
@@ -116,7 +124,8 @@ public class Search {
 					.searchRowByStartsWithValue(filter.getAttributeName(), filter.getAttributeValue()));
 		} else if (objectClass.equals(ObjectClass.GROUP)) {
 			GroupFile groupFile = searchAllGroups();
-			fillGroupHandler(groupFile.searchRowByStartsWithValue(filter.getAttributeName(), filter.getAttributeValue()));
+			fillGroupHandler(groupFile
+					.searchRowByStartsWithValue(filter.getAttributeName(), filter.getAttributeValue()));
 		}
 	}
 
@@ -169,26 +178,44 @@ public class Search {
 					CollectionUtil.newSet(passwdRow.getShell())));
 			bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.HOME.getName(),
 					CollectionUtil.newSet(passwdRow.getHomeDirectory())));
-			
+
 			if (filter.isUid()) {
-			bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.GROUPS.getName(), EvaluateCommandsResultOutput
-								.evaluateUserGroups(unixConnection.execute(
+				bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.GROUPS.getName(),
+						EvaluateCommandsResultOutput
+								.evaluateUserGroups(unixConnection.executeShell(
 										UnixConnector.getCommandGenerator().userGroups(filter.getAttributeValue()))
 										.getOutput())));
 			}
-			
+
 			if (filter.isUid()) {
-				bld.addAttribute(OperationalAttributes.ENABLE_NAME,
-						EvaluateCommandsResultOutput
-								.evaluateUserStatus(unixConnection.execute(
-										UnixConnector.getCommandGenerator().userStatus(filter.getAttributeValue()))
-										.getOutput()));
+				String shadowInfo = unixConnection.executeShell(
+						UnixConnector.getCommandGenerator().userStatus(filter.getAttributeValue())).getOutput();
+				if (StringUtil.isNotBlank(shadowInfo)) {
+					String[] shadowAttrs = shadowInfo.split(":", 9);
+					bld.addAttribute(OperationalAttributes.LOCK_OUT_NAME,
+							EvaluateCommandsResultOutput.evaluateUserLockoutStatus(shadowAttrs[1]));
+					Long timeInMilis = EvaluateCommandsResultOutput.evaluateDisableDate(shadowAttrs[7]);
+					
+					Date currentTime = new Date();
+				if (timeInMilis != 0) {
+						bld.addAttribute(OperationalAttributes.DISABLE_DATE_NAME, timeInMilis);
+						boolean enabled = currentTime.before(new Date(timeInMilis));
+						bld.addAttribute(
+								OperationalAttributes.ENABLE_NAME, enabled);
+					} else {
+					bld.addAttribute(
+							OperationalAttributes.ENABLE_NAME,
+							EvaluateCommandsResultOutput.evaluateUserActivationStatus(shadowAttrs[7]));
+					}
+				}
+
 			}
 			handler.handle(bld.build());
 		}
 	}
 
-	private void fillGroupHandler(final List<GroupRow> groupRows) throws IOException, InterruptedException, JSchException {
+	private void fillGroupHandler(final List<GroupRow> groupRows) throws IOException, InterruptedException,
+			JSchException {
 		if (groupRows == null || groupRows.isEmpty()) {
 			throw new ConnectException("No results found");
 		}
@@ -204,9 +231,9 @@ public class Search {
 			}
 			bld.addAttribute(AttributeBuilder.build(SchemaGroupAttribute.GID.getName(),
 					CollectionUtil.newSet(groupRow.getGroupIdentifier())));
-			
+
 			handler.handle(bld.build());
 		}
-		
+
 	}
 }

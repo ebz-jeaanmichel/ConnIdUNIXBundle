@@ -14,9 +14,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.connid</groupId>
+		<groupId>net.tirasa.connid</groupId>
 		<artifactId>connid</artifactId>
-		<version>1.3.3.1</version>
+		<version>1.4.2.0-SNAPSHOT</version>
 	</parent>
 
 
@@ -69,7 +69,7 @@
 	</mailingLists>
 
 	<properties>
-		<base.version>1.3.3.1</base.version>
+		<base.version>1.4.0.0</base.version>
 		<jsch.version>0.1.51</jsch.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -77,14 +77,14 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.connid</groupId>
-			<artifactId>connid-framework</artifactId>
+			<groupId>net.tirasa.connid</groupId>
+			<artifactId>connector-framework</artifactId>
 			<version>${base.version}</version>
 		</dependency>
 
 		<dependency>
-			<groupId>org.connid</groupId>
-			<artifactId>connid-framework-internal</artifactId>
+			<groupId>net.tirasa.connid</groupId>
+			<artifactId>connector-framework-internal</artifactId>
 			<version>${base.version}</version>
 		</dependency>
 		<!-- SSH -->
@@ -94,12 +94,17 @@
 			<version>${jsch.version}</version>
 		</dependency>
 		<!-- SSH -->
+		<dependency>
+            <groupId>com.github.cverges.expect4j</groupId>
+            <artifactId>expect4j</artifactId>
+            <version>1.6</version>
+        </dependency>
 
 		<!-- TEST -->
 		<dependency>
-			<groupId>org.connid</groupId>
-			<artifactId>connid-test-common</artifactId>
-			<version>${base.version}</version>
+			<groupId>net.tirasa.connid</groupId>
+			<artifactId>connector-test-common</artifactId>
+			<version>1.4.2.0-SNAPSHOT</version>  <!-- ${base.version} -->
 			<scope>test</scope>
 		</dependency>
 
@@ -335,6 +340,7 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+		
 	</repositories>
 
 </project>

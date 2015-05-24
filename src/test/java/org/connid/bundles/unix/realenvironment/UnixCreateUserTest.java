@@ -31,6 +31,7 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class UnixCreateUserTest extends SharedTestMethods {
@@ -144,6 +145,6 @@ public class UnixCreateUserTest extends SharedTestMethods {
 		if (newAccount != null) {
 			connector.delete(ObjectClass.ACCOUNT, newAccount, null);
 		}
-		connector.dispose();
+//		connector.dispose();
 	}
 }

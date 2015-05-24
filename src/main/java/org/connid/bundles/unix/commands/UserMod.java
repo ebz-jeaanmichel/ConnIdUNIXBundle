@@ -19,6 +19,7 @@ import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
+import org.connid.bundles.unix.commands.OptionBuilder.Operation;
 import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
@@ -50,6 +51,10 @@ public class UserMod {
      */
     private static final String UNLOCK_USER_OPTION = "-U";
 
+    
+    private static final String ENABLE_USER_OPTION = "-e ''";
+    
+    private static final String DISABLE_USER_OPTION = "-e";
     /**
      * The new value of the user's password file comment field. It is normally modified using the chfn(1) utility.
      */
@@ -94,9 +99,9 @@ public class UserMod {
     	this.attrs = attrs;
     }
     
-    public String userMod() {
+    public String userMod(boolean isAdd) {
        StringBuilder usermodCommand = new StringBuilder(USERMOD_COMMAND);
-       String attributeCommand = OptionBuilder.buildUserCommandOptions(attrs, false);
+       String attributeCommand = OptionBuilder.buildUserCommandOptions(attrs, isAdd ? Operation.UPDATE : Operation.REMOVE_VALUES);
        if (StringUtil.isNotBlank(attributeCommand)){
     	   	usermodCommand.append(" ").append(attributeCommand);
     	   	usermodCommand.append(actualUsername);
@@ -112,5 +117,16 @@ public class UserMod {
 
     public String unlockUser(final String username) {
         return USERMOD_COMMAND + " " + UNLOCK_USER_OPTION + " " + username;
+    }
+    
+    public String enableUser(final String username) {
+        return USERMOD_COMMAND + " " + ENABLE_USER_OPTION + " " + username;
+    }
+    
+    public String disableUser(final String username, final String disableDate) {
+    	StringBuilder disableCommand = new StringBuilder(USERMOD_COMMAND);
+		disableCommand.append(" ").append(DISABLE_USER_OPTION).append(" ")
+				.append(StringUtil.isEmpty(disableDate) ? "0" : disableDate).append(" ").append(username);
+        return disableCommand.toString();
     }
 }

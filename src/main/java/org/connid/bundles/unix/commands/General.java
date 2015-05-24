@@ -39,7 +39,7 @@ public class General {
     }
     
     public static String searchGroupsForUser(final String username) {
-        return "groups " + username;
+        return "id -nG " + username;
     }
     
     public static String mkdirSsh(final String username){

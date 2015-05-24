@@ -41,11 +41,12 @@ import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
 import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
+import org.identityconnectors.framework.spi.PoolableConnector;
 import org.identityconnectors.framework.spi.operations.*;
 
 @ConnectorClass(configurationClass = UnixConfiguration.class,
 displayNameKey = "unix.connector.display")
-public class UnixConnector implements Connector, CreateOp, UpdateOp, 
+public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, 
         DeleteOp, TestOp, SearchOp<Operand>, AuthenticateOp, SchemaOp, ResolveUsernameOp, UpdateAttributeValuesOp {
 
     private static final Log LOG = Log.getLog(UnixConnector.class);
@@ -63,6 +64,15 @@ public class UnixConnector implements Connector, CreateOp, UpdateOp,
     public final void init(final Configuration configuration) {
         unixConfiguration = (UnixConfiguration) configuration;
         commandGenerator = new CommandGenerator(unixConfiguration);
+        try {
+			UnixConnection.openConnection(unixConfiguration);
+		} catch (IOException e) {
+			  LOG.error("Error in connection process", e);
+			  throw new ConnectorException("Error in connection process: " + e.getMessage(), e);
+		} catch (JSchException e) {
+			 LOG.error("Error in connection process", e);
+			 throw new ConnectorException("Error in connection process: " + e.getMessage());
+		}
     }
 
     public static CommandGenerator getCommandGenerator() {
@@ -212,5 +222,11 @@ public class UnixConnector implements Connector, CreateOp, UpdateOp,
 	            LOG.error("Error in connection process", ex);
 	        }
 	        return uid;
+	}
+
+	@Override
+	public void checkAlive() {
+		UnixConnection.checkAlive();
+		
 	}
 }

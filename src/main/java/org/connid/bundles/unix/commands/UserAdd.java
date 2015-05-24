@@ -18,10 +18,8 @@ package org.connid.bundles.unix.commands;
 import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
-import org.connid.bundles.unix.schema.SchemaAccountAttribute;
-import org.connid.bundles.unix.utilities.Utilities;
+import org.connid.bundles.unix.commands.OptionBuilder.Operation;
 import org.identityconnectors.framework.common.objects.Attribute;
-import org.identityconnectors.framework.common.objects.Name;
 
 public class UserAdd {
 
@@ -76,7 +74,7 @@ public class UserAdd {
 
     private String createUserAddCommand() {
         StringBuilder useraddCommand = new StringBuilder(USERADD_COMMAND);
-        useraddCommand.append(" ").append(OptionBuilder.buildUserCommandOptions(attributes, true));
+        useraddCommand.append(" ").append(OptionBuilder.buildUserCommandOptions(attributes, Operation.CREATE));
         if (unixConfiguration.isCreateHomeDirectory()) {
             useraddCommand.append(CREATE_HOME_DIR_OPTION).append(" ");
         }
