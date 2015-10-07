@@ -92,6 +92,16 @@ public class CommandGenerator {
         return commandToExecute.append(General.searchUserStatusIntoShadowFile(username)).toString();
     }
     
+    public String userPermissions(final String username) {
+    	StringBuilder commandToExecute = new StringBuilder();
+    	if (!unixConfiguration.isRoot()){
+    		Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+    		commandToExecute.append(sudoCommand.sudo());
+    	}
+    	
+    	return commandToExecute.append(General.getUserPermissions(username)).toString();
+    }
+    
     public String buildRemoveFromGroupsCommand(final String username, final List<Object> values){
     	StringBuilder commandToExecute = new StringBuilder();
     	if (!unixConfiguration.isRoot()) {
@@ -266,8 +276,36 @@ public class CommandGenerator {
     		Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
         	commandToExecute.append(sudoCommand.sudo());
     	}
-    	Tee teeCommand = new Tee(unixConfiguration, username);
+    	String filename = new StringBuilder("/home/").append(username).append("/.ssh/authorized_keys").toString();
+    	Tee teeCommand = new Tee(unixConfiguration, filename);
     	commandToExecute.append(teeCommand.tee());
+        return commandToExecute.toString();
+    }
+    
+    public String setPermissions(final String username, final String permissions, final boolean isUser) {
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+        commandToExecute.append("echo ").append("\"").append(isUser ? username : "%"+username).append(" ").append(permissions).append("\"").append(" | ");
+    	if (!unixConfiguration.isRoot()){
+    		Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+    	}
+    	String filename = new StringBuilder("/etc/sudoers.d/").append(username).append(isUser ? "_user" : "_group").toString();
+    	Tee teeCommand = new Tee(unixConfiguration, filename);
+    	commandToExecute.append(teeCommand.tee());
+        return commandToExecute.toString();
+    }
+    
+    public String removePermissions(final String username, boolean isUser){
+    	StringBuilder commandToExecute = new StringBuilder();
+        if (!unixConfiguration.isRoot()){
+        	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+        	commandToExecute.append(sudoCommand.sudo());
+        }
+        commandToExecute.append("rm -f /etc/sudoers.d/").append(username).append(isUser ? "_user" : "_group");
         return commandToExecute.toString();
     }
 

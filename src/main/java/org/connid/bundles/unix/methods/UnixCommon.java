@@ -10,6 +10,7 @@ import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
 import org.connid.bundles.unix.UnixResult.Operation;
 import org.connid.bundles.unix.schema.SchemaAccountAttribute;
+import org.connid.bundles.unix.schema.SchemaGroupAttribute;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
@@ -71,6 +72,25 @@ public class UnixCommon {
 		}
 	}
 	
+	public static void appendCreateOrUpdatePermissions(StringBuilder commandBuilder, String username, Set<Attribute> attrs, boolean isUser){
+		Attribute permissions = null;
+		if (isUser){
+			permissions = AttributeUtil.find(SchemaAccountAttribute.PERMISIONS.getName(), attrs);
+		} else {
+			permissions = AttributeUtil.find(SchemaGroupAttribute.PERMISSIONS.getName(), attrs);
+		}
+		if (permissions != null && permissions.getValue() != null && !permissions.getValue().isEmpty()){
+			String permissionsCommand = UnixConnector.getCommandGenerator().setPermissions(isUser ? username : "%"+username, (String) permissions.getValue().get(0), isUser);
+			appendCommand(commandBuilder, permissionsCommand);
+		}
+	}
+	
+	public static void appendRemovePermissions(StringBuilder commandBuilder, String username, boolean isUser){
+			String permissionsCommand = UnixConnector.getCommandGenerator().removePermissions(username, isUser);
+			appendCommand(commandBuilder, permissionsCommand);
+	}
+	
+
 	public static void appendDeletePublicKeyCommand(StringBuilder commandBuilder, String username, Set<Attribute> attrs){
 		Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
 		if (publiKey != null && publiKey.getValue() != null && !publiKey.getValue().isEmpty()){

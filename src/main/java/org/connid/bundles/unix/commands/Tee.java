@@ -12,16 +12,16 @@ public class Tee {
 	     */
 	    private static final String TEE_COMMAND = "tee";
 
-	    private String username;
+	    private String filename;
 
-	    public Tee(UnixConfiguration unixConfiguration, String username) {
+	    public Tee(UnixConfiguration unixConfiguration, String filename) {
 			this.unixConfiguration = unixConfiguration;
-			this.username = username;
+			this.filename = filename;
 		}
 	    
 	    public String tee(){
 	    	StringBuilder teeCommand = new StringBuilder();
-	    	teeCommand.append(TEE_COMMAND).append(" ").append("/home/").append(username).append("/.ssh/authorized_keys");
+	    	teeCommand.append(TEE_COMMAND).append(" ").append(filename);
 	    	return teeCommand.toString();
 	    }
 }

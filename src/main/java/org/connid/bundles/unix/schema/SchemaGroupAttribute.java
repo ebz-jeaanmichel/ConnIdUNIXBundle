@@ -9,6 +9,7 @@ public enum SchemaGroupAttribute {
 	NAME(Name.NAME, "-n", true, String.class, 1),
 	KEY("key", "-K", false, String.class, -1),
 	GID("gid", "-g", false, Integer.class, 1),
+	PERMISSIONS("permissions", "-g", false, String.class, 1),
 	SYSTEM_ACCOUNT("systemAccount", "-r", false, Boolean.class, 1);
 	
 	private String name;

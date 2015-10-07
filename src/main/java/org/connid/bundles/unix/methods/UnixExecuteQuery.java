@@ -15,8 +15,11 @@
  */
 package org.connid.bundles.unix.methods;
 
+import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSchException;
+
 import java.io.IOException;
+
 import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.search.Operand;
@@ -55,7 +58,7 @@ public class UnixExecuteQuery {
             doExecuteQuery();
         } catch (Exception e) {
             LOG.error(e, "error during execute query operation");
-            throw new ConnectorException(e.getCause());
+            throw new ConnectorException(e.getMessage(), e);
         }
     }
 
@@ -69,33 +72,40 @@ public class UnixExecuteQuery {
         if (filter == null) {
             throw new ConnectorException("Filter is null");
         }
-
+        ChannelShell shellChannel = null;
+        try{
+        	shellChannel = connection.createShellChannel();
         switch (filter.getOperator()) {
             case EQ:
-                new Search(unixConfiguration, connection, handler, objectClass, filter).equalSearch();
+                new Search(shellChannel, connection, handler, objectClass, filter).equalSearch();
                 break;
             case SW:
-                new Search(unixConfiguration, connection, handler,
+                new Search(shellChannel, connection, handler,
                         objectClass, filter).startsWithSearch();
                 break;
             case EW:
-                new Search(unixConfiguration, connection, handler,
+                new Search(shellChannel, connection, handler,
                         objectClass, filter).endsWithSearch();
                 break;
             case C:
-                new Search(unixConfiguration, connection, handler,
+                new Search(shellChannel, connection, handler,
                         objectClass, filter).containsSearch();
                 break;
             case OR:
-                new Search(unixConfiguration, connection, handler,
+                new Search(shellChannel, connection, handler,
                         objectClass, filter.getFirstOperand()).orSearch();
                 break;
             case AND:
-                new Search(unixConfiguration, connection, handler,
+                new Search(shellChannel, connection, handler,
                         objectClass, filter).andSearch();
                 break;
             default:
+            	UnixConnection.disconnectShellChannel(shellChannel);
                 throw new ConnectorException("Wrong Operator");
         }
+        } finally {
+        	UnixConnection.disconnectShellChannel(shellChannel);
+        }
+        
     }
 }

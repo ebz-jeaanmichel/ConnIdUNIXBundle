@@ -42,6 +42,10 @@ public class General {
         return "id -nG " + username;
     }
     
+    public static String getUserPermissions(final String username) {
+    	return "sudo -l -U " + username;
+    }
+    
     public static String mkdirSsh(final String username){
     	StringBuilder builder = new StringBuilder();
     	builder.append("mkdir -p /home/").append(username).append("/.ssh");
@@ -57,7 +61,7 @@ public class General {
     public static String changePermissionsForKeys(final String username, final String dirPermisions, final String keyPermisions, final boolean root){
     	StringBuilder builder = new StringBuilder();
     	if (root){
-    	builder.append("chmod ").append(keyPermisions).append(" /home/").append(username).append("/.ssh/authorized_keys").append(" && chmod ").append(dirPermisions).append(" /home/").append(username).append("/.ssh");
+    		builder.append("chmod ").append(keyPermisions).append(" /home/").append(username).append("/.ssh/authorized_keys").append(" && chmod ").append(dirPermisions).append(" /home/").append(username).append("/.ssh");
     	} else {
     		builder.append("sudo chmod ").append(keyPermisions).append(" /home/").append(username).append("/.ssh/authorized_keys").append(" && sudo chmod ").append(dirPermisions).append(" /home/").append(username).append("/.ssh");
     	}

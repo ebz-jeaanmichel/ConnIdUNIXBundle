@@ -52,6 +52,8 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp,
     private static final Log LOG = Log.getLog(UnixConnector.class);
 
     private UnixConfiguration unixConfiguration;
+    
+    private UnixConnection unixConnection;
 
     private static CommandGenerator commandGenerator = null;
 
@@ -65,7 +67,7 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp,
         unixConfiguration = (UnixConfiguration) configuration;
         commandGenerator = new CommandGenerator(unixConfiguration);
         try {
-			UnixConnection.openConnection(unixConfiguration);
+			unixConnection = UnixConnection.openConnection(unixConfiguration);
 		} catch (IOException e) {
 			  LOG.error("Error in connection process", e);
 			  throw new ConnectorException("Error in connection process: " + e.getMessage(), e);
@@ -226,7 +228,7 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp,
 
 	@Override
 	public void checkAlive() {
-		UnixConnection.checkAlive();
+		unixConnection.checkAlive(unixConfiguration);
 		
 	}
 }

@@ -27,7 +27,7 @@ import org.identityconnectors.framework.common.objects.Name;
 
 public class SharedTestMethods {
 	
-	protected static final String DEFAUL_SHELL = "/bin/rbash";
+	protected static final String DEFAUL_SHELL = "/bin/bash";
 	
 	private static final Log LOG = Log.getLog(SharedTestMethods.class);
 
@@ -44,6 +44,7 @@ public class SharedTestMethods {
         config.setCreateHomeDirectory(true);
         config.setDeleteHomeDirectory(true);
         config.setRoot(UnixProperties.UNIX_USER_ROOT);
+        config.setUsePty(UnixProperties.UNIX_PTY);
         config.setSudoPassword(new GuardedString(UnixProperties.UNIX_PASSWORD.toCharArray()));
         config.setSshConnectionTimeout(50000);
 //        config.setCommentAttribute("comment");

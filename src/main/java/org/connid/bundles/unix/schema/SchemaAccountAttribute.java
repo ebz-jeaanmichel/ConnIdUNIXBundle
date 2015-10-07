@@ -20,6 +20,7 @@ public enum SchemaAccountAttribute {
 	UID("uid", "-u", false, Integer.class, 1),
 	SYSTEM_ACCOUNT("systemAccount", "-r", false, Boolean.class, 1),
 	USER_GROUP("createUserGroup", "-U", false, Boolean.class,1),
+	PERMISIONS("permissions", "", false, String.class,1),
 	SELINUX("selinux", "-Z", false, String.class, 1);
 	
 	private String name;

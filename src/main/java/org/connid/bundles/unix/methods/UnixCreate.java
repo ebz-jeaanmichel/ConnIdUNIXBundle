@@ -57,16 +57,17 @@ public class UnixCreate {
 	}
 
 	public Uid create() {
-		try {
+//		try {
 			return doCreate();
-		} catch (Exception e) {
-			LOG.error(e, "error during creation");
-			throw new ConnectorException(e);
-		}
+//		} catch (Exception e) {
+//			LOG.error(e, "error during creation");
+//			throw e;
+//		}
 	}
 
-	private Uid doCreate() throws IOException, InterruptedException, JSchException {
+	private Uid doCreate() {
 
+		
 		if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
 			throw new IllegalStateException("Wrong object class");
 		}
@@ -78,7 +79,7 @@ public class UnixCreate {
 		}
 
 		String objectName = name.getNameValue();
-
+		try {
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
 			StringBuilder commandToExecute = new StringBuilder();
 			String addCommand = UnixConnector.getCommandGenerator().createUser(objectName, attrs);
@@ -86,15 +87,31 @@ public class UnixCreate {
 			
 			UnixCommon.appendCreateOrUpdatePublicKeyCommand(commandToExecute, objectName, attrs, false);
 			
-			UnixResult result = unixConnection.execute(commandToExecute.toString());
+			UnixCommon.appendCreateOrUpdatePermissions(commandToExecute, objectName, attrs, true);
+			
+			UnixResult result;
+			
+				result = unixConnection.execute(commandToExecute.toString());
+			
 			result.checkResult(Operation.USERADD, "Could not create user", LOG);
 
 			UnixCommon.processPassword(unixConnection, objectName, attrs);
 			processActivation(objectName);
 
 		} else if (objectClass.equals(ObjectClass.GROUP)) {
-			UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator().createGroup(objectName, attrs));
+			StringBuilder commandToExecute = new StringBuilder();
+			String addCommand = UnixConnector.getCommandGenerator().createGroup(objectName, attrs);
+			UnixCommon.appendCommand(commandToExecute, addCommand);
+			
+			UnixCommon.appendCreateOrUpdatePermissions(commandToExecute, objectName, attrs, false);
+			
+			UnixResult result = unixConnection.execute(commandToExecute.toString());
 			result.checkResult(Operation.GROUPADD, "Could not create group", LOG);
+		}
+		} catch (JSchException e) {
+			throw new ConnectorException(e.getMessage(), e);
+		} catch (IOException e) {
+			 throw new ConnectorException(e.getMessage(), e);
 		}
 
 		return new Uid(objectName);

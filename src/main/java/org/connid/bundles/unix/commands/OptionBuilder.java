@@ -20,7 +20,7 @@ public class OptionBuilder {
 		StringBuilder userCommand = new StringBuilder();
 		for (Attribute attr : attributes) {
 			if ((operation == Operation.CREATE && attr.is(Name.NAME))
-					|| attr.is(SchemaAccountAttribute.PUBLIC_KEY.getName())) {
+					|| attr.is(SchemaAccountAttribute.PUBLIC_KEY.getName()) || attr.is(SchemaAccountAttribute.PERMISIONS.getName())) {
 				continue;
 			}
 
@@ -91,7 +91,7 @@ public class OptionBuilder {
 	public static String buildGroupCommandOptions(Set<Attribute> attributes, boolean isAdd) {
 		StringBuilder userCommand = new StringBuilder();
 		for (Attribute attr : attributes) {
-			if (isAdd && attr.is(Name.NAME)) {
+			if (isAdd && attr.is(Name.NAME) || attr.is(SchemaGroupAttribute.PERMISSIONS.getName())) {
 				continue;
 			}
 

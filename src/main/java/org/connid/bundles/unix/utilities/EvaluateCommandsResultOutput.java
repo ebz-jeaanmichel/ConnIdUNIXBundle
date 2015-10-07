@@ -83,6 +83,11 @@ public class EvaluateCommandsResultOutput {
     
     }
     
+    public static String evaluateUserPermissions(String permissions){
+    	String [] normalized = permissions.split("\n");
+    	return normalized[normalized.length-1];
+    }
+    
     public static boolean evaluateUserActivationStatus(
             final String activationAttr) {
         if (StringUtil.isBlank(activationAttr)){

@@ -42,6 +42,10 @@ public class UnixConfiguration extends AbstractConfiguration {
     private String shell = "";
 
     private boolean root = false;
+    
+    private boolean usePty = false;
+    
+    private String ptyType = "vt100";
 
     private GuardedString sudoPassword = null;
 
@@ -99,8 +103,8 @@ public class UnixConfiguration extends AbstractConfiguration {
     public final boolean isCreateHomeDirectory() {
         return createHomeDirectory;
     }
-
-    public final void setCreateHomeDirectory(
+    
+        public final void setCreateHomeDirectory(
             final boolean createHomeDirectory) {
         this.createHomeDirectory = createHomeDirectory;
     }
@@ -142,8 +146,28 @@ public class UnixConfiguration extends AbstractConfiguration {
         return root;
     }
 
+    @ConfigurationProperty(displayMessageKey = "unix.usepty.display",
+    	    helpMessageKey = "unix.usepty.help", order = 10)
+    public boolean isUsePty() {
+		return usePty;
+	}
+    
+    public void setUsePty(boolean usePty) {
+		this.usePty = usePty;
+	}
+    
+    @ConfigurationProperty(displayMessageKey = "unix.ptytype.display",
+    	    helpMessageKey = "unix.ptytype.help", order = 11)
+    public String getPtyType() {
+		return ptyType;
+	}
+    
+    public void setPtyType(String ptyType) {
+		this.ptyType = ptyType;
+	}
+    
     @ConfigurationProperty(displayMessageKey = "unix.ssh.connection.timeout.display",
-    helpMessageKey = "unix.ssh.connection.timeout.help", order = 10)
+    helpMessageKey = "unix.ssh.connection.timeout.help", order = 12)
     public int getSshConnectionTimeout() {
 		return sshConnectionTimeout;
 	}
@@ -177,7 +201,7 @@ public class UnixConfiguration extends AbstractConfiguration {
     }
 
     @ConfigurationProperty(displayMessageKey = "unix.sudopwd.display",
-    helpMessageKey = "unix.sudopwd.help", order = 10)
+    helpMessageKey = "unix.sudopwd.help", order = 13)
     public GuardedString getSudoPassword() {
         return sudoPassword;
     }
@@ -232,5 +256,31 @@ public class UnixConfiguration extends AbstractConfiguration {
         if ((!root) && (StringUtil.isBlank(sudoPassword.toString()))) {
             throw new ConfigurationException("Unix connector needs sudo password or root password");
         }
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+    	if (!(obj instanceof UnixConfiguration)){
+    		return false;
+    	}
+    	
+    	UnixConfiguration other = (UnixConfiguration) obj;
+    	if (admin != null ? !admin.equals(other.admin) : other.admin != null) return false;
+    	if (hostname != null ? !hostname.equals(other.hostname) : other.hostname != null) return false;
+    	if (password != null ? !password.equals(other.password) : other.password != null) return false;
+    	if (port != other.port ) return false;
+    	
+    	return true;
+    }
+    
+    @Override
+    public int hashCode() {
+    	int result = super.hashCode();
+        result = 31 * result + (admin != null ? admin.hashCode() : 0);
+        result = 31 * result + (hostname != null ? hostname.hashCode() : 0);
+        result = 31 * result + (password != null ? password.hashCode() : 0);
+        result = 31 * result + (port);
+        
+        return result;
     }
 }

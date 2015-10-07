@@ -26,6 +26,7 @@ public class UnixProperties {
     public static String UNIX_BASE_HOME_DIRECTORY;
     public static String UNIX_USER_SHELL;
     public static boolean UNIX_USER_ROOT;
+    public static boolean UNIX_PTY;
 
     static {
         ResourceBundle unixProperties = ResourceBundle.getBundle("unix");
@@ -35,6 +36,7 @@ public class UnixProperties {
         UNIX_PORT = unixProperties.getString("unix.port");
         UNIX_USER_SHELL = unixProperties.getString("unix.user.shell");
         UNIX_USER_ROOT = Boolean.valueOf(unixProperties.getString("unix.user.root")).booleanValue();
+        UNIX_USER_ROOT = Boolean.valueOf(unixProperties.getString("unix.pty")).booleanValue();
         UNIX_BASE_HOME_DIRECTORY =
                 unixProperties.getString("unix.base.home.directory");
     }
