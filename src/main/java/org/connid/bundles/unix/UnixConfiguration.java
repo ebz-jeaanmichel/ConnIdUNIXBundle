@@ -49,6 +49,8 @@ public class UnixConfiguration extends AbstractConfiguration {
 
     private GuardedString sudoPassword = null;
 
+    private long readTimeout = 1000000; 
+    
 //    private String commentAttribute = "";
 
 //    private String shellAttribute = "";
@@ -209,6 +211,16 @@ public class UnixConfiguration extends AbstractConfiguration {
     public void setSudoPassword(GuardedString sudoPassword) {
         this.sudoPassword = sudoPassword;
     }
+    
+    @ConfigurationProperty(displayMessageKey = "unix.readtimeout.display",
+    	    helpMessageKey = "unix.readtimeout.help", order = 14)
+    public long getReadTimeout() {
+		return readTimeout;
+	}
+    
+    public void setReadTimeout(long readTimeout) {
+		this.readTimeout = readTimeout;
+	}
 
     @Override
     public final void validate() {

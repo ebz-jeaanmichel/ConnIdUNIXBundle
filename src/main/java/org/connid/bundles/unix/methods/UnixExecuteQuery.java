@@ -72,39 +72,39 @@ public class UnixExecuteQuery {
         if (filter == null) {
             throw new ConnectorException("Filter is null");
         }
-        ChannelShell shellChannel = null;
+//        ChannelShell shellChannel = null;
         try{
-        	shellChannel = connection.createShellChannel();
+//        	shellChannel = connection.createShellChannel();
         switch (filter.getOperator()) {
             case EQ:
-                new Search(shellChannel, connection, handler, objectClass, filter).equalSearch();
+                new Search(connection, handler, objectClass, filter).equalSearch();
                 break;
             case SW:
-                new Search(shellChannel, connection, handler,
+                new Search(connection, handler,
                         objectClass, filter).startsWithSearch();
                 break;
             case EW:
-                new Search(shellChannel, connection, handler,
+                new Search(connection, handler,
                         objectClass, filter).endsWithSearch();
                 break;
             case C:
-                new Search(shellChannel, connection, handler,
+                new Search(connection, handler,
                         objectClass, filter).containsSearch();
                 break;
             case OR:
-                new Search(shellChannel, connection, handler,
+                new Search(connection, handler,
                         objectClass, filter.getFirstOperand()).orSearch();
                 break;
             case AND:
-                new Search(shellChannel, connection, handler,
+                new Search(connection, handler,
                         objectClass, filter).andSearch();
                 break;
             default:
-            	UnixConnection.disconnectShellChannel(shellChannel);
+//            	UnixConnection.disconnectShellChannel(shellChannel);
                 throw new ConnectorException("Wrong Operator");
         }
         } finally {
-        	UnixConnection.disconnectShellChannel(shellChannel);
+//        	UnixConnection.disconnectShellChannel(shellChannel);
         }
         
     }

@@ -45,6 +45,7 @@ public class SharedTestMethods {
         config.setDeleteHomeDirectory(true);
         config.setRoot(UnixProperties.UNIX_USER_ROOT);
         config.setUsePty(UnixProperties.UNIX_PTY);
+        config.setPtyType(UnixProperties.UNIX_PTY_TYPE);
         config.setSudoPassword(new GuardedString(UnixProperties.UNIX_PASSWORD.toCharArray()));
         config.setSshConnectionTimeout(50000);
 //        config.setCommentAttribute("comment");

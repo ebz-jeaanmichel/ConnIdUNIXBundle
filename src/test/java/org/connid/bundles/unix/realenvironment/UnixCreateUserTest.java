@@ -95,6 +95,35 @@ public class UnixCreateUserTest extends SharedTestMethods {
 				.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
 		assertEquals(name.getNameValue(), newAccount.getUidValue());
 		final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
+		System.out.println("first read");
+		connector.executeQuery(ObjectClass.ACCOUNT,
+				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
+
+					@Override
+					public boolean handle(final ConnectorObject connObj) {
+						actual.add(connObj);
+						return true;
+					}
+				}, null);
+		for (ConnectorObject connObj : actual) {
+			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
+		}
+//		sleep(10000);
+		System.out.println("second read");
+		connector.executeQuery(ObjectClass.ACCOUNT,
+				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
+
+					@Override
+					public boolean handle(final ConnectorObject connObj) {
+						actual.add(connObj);
+						return true;
+					}
+				}, null);
+		for (ConnectorObject connObj : actual) {
+			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
+		}
+		sleep(10000);
+		System.out.println("third read");
 		connector.executeQuery(ObjectClass.ACCOUNT,
 				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
 
@@ -110,6 +139,15 @@ public class UnixCreateUserTest extends SharedTestMethods {
 		connector.authenticate(ObjectClass.ACCOUNT, newAccount.getUidValue(), attrs.getGuardedPassword(), null);
 	}
 
+	private void sleep(final long timeout) {
+		try {
+			Thread.sleep(timeout);
+		} catch (Exception ee) {
+			throw new RuntimeException(ee);
+//			LOG.info("Failed to sleep between reads with pollTimeout: " + 1000, ee);
+		}
+	}
+	
 	@Test(expected = ConnectorException.class)
 	public void createWithWrongObjectClass() {
 		printTestTitle("createWithWrongObjectClass");

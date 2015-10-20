@@ -111,13 +111,13 @@ public class UnixUpdate {
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
 
 			StringBuilder commandBuilder = new StringBuilder();
-			ChannelShell shellChannel = unixConnection.createShellChannel();
+//			ChannelShell shellChannel = unixConnection.createShellChannel();
 			if (!isAdd) {
 				Attribute attr = AttributeUtil.find(SchemaAccountAttribute.GROUPS.getName(), attrs);
 				if (!UnixCommon.isEmpty(attr)) {
 					
 					List<String> groups = EvaluateCommandsResultOutput.evaluateUserGroups(unixConnection.executeShell(
-							General.searchGroupsForUser(newUserNameValue), shellChannel).getOutput());
+							General.searchGroupsForUser(newUserNameValue)).getOutput());
 					
 					List<Object> newGroups = new ArrayList<Object>();
 					for (String group : groups) {
@@ -142,7 +142,7 @@ public class UnixUpdate {
 
 			if (newUserName != null) {
 				String oldUser = unixConnection.executeShell(
-						UnixConnector.getCommandGenerator().userExists(uid.getUidValue()), shellChannel).getOutput();
+						UnixConnector.getCommandGenerator().userExists(uid.getUidValue())).getOutput();
 				if (StringUtil.isBlank(oldUser)) {
 					throw new UnknownUidException("User do not exists");
 				}
@@ -153,7 +153,7 @@ public class UnixUpdate {
 						newUserNameValue);
 				UnixCommon.appendCommand(commandBuilder, groupRename);
 			}
-			UnixConnection.disconnectShellChannel(shellChannel);
+//			UnixConnection.disconnectShellChannel(shellChannel);
 
 			if (isAdd) {
 				UnixCommon.appendCreateOrUpdatePublicKeyCommand(commandBuilder, newUserNameValue, attrs, false);
