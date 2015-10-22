@@ -54,6 +54,29 @@ public class SharedTestMethods {
         return config;
     }
     
+    protected final UnixConfiguration createConfiguration2() {
+        // create the connector configuration..
+        UnixConfiguration config = new UnixConfiguration();
+        config.setAdmin("midpoint");
+        config.setPassword(
+                new GuardedString("secret".toCharArray()));
+        config.setHostname("169.254.141.117");
+        config.setPort(Integer.valueOf(UnixProperties.UNIX_PORT).intValue());
+//        config.setBaseHomeDirectory(UnixProperties.UNIX_BASE_HOME_DIRECTORY);
+        config.setShell(UnixProperties.UNIX_USER_SHELL);
+        config.setCreateHomeDirectory(true);
+        config.setDeleteHomeDirectory(true);
+        config.setRoot(UnixProperties.UNIX_USER_ROOT);
+        config.setUsePty(UnixProperties.UNIX_PTY);
+        config.setPtyType(UnixProperties.UNIX_PTY_TYPE);
+        config.setSudoPassword(new GuardedString("secret".toCharArray()));
+        config.setSshConnectionTimeout(50000);
+//        config.setCommentAttribute("comment");
+//        config.setShellAttribute("shell");
+//        config.setHomeDirectoryAttribute("homeDir");
+        return config;
+    }
+    
     protected final Set<Attribute> createPasswordChange(String password){
     	GuardedString encPassword = null;
         if (password != null) {

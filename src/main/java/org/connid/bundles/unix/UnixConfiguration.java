@@ -49,7 +49,9 @@ public class UnixConfiguration extends AbstractConfiguration {
 
     private GuardedString sudoPassword = null;
 
-    private long readTimeout = 1000000; 
+    private long readTimeout = 1000000;
+    
+    private long timeToWait = 1000;
     
 //    private String commentAttribute = "";
 
@@ -221,6 +223,16 @@ public class UnixConfiguration extends AbstractConfiguration {
     public void setReadTimeout(long readTimeout) {
 		this.readTimeout = readTimeout;
 	}
+   
+    @ConfigurationProperty(displayMessageKey = "unix.timetowait.display",
+    	    helpMessageKey = "unix.timetowait.help", order = 14)
+   public long getTimeToWait() {
+	return timeToWait;
+}
+   
+   public void setTimeToWait(long timeToWait) {
+	this.timeToWait = timeToWait;
+}
 
     @Override
     public final void validate() {
@@ -294,5 +306,12 @@ public class UnixConfiguration extends AbstractConfiguration {
         result = 31 * result + (port);
         
         return result;
+    }
+    
+    @Override
+    public String toString() {
+    	StringBuilder sb = new StringBuilder();
+    	sb.append(admin).append("@").append(hostname).append(":").append(port);
+    	return sb.toString();
     }
 }

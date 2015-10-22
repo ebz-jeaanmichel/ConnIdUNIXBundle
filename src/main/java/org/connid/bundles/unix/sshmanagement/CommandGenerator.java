@@ -288,7 +288,7 @@ public class CommandGenerator {
         	Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
         	commandToExecute.append(sudoCommand.sudo());
         }
-        commandToExecute.append("echo ").append("\"").append(isUser ? username : "%"+username).append(" ").append(permissions).append("\"").append(" | ");
+        commandToExecute.append("echo ").append("\"").append(username).append(" ").append(permissions).append("\"").append(" | ");
     	if (!unixConfiguration.isRoot()){
     		Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
         	commandToExecute.append(sudoCommand.sudo());

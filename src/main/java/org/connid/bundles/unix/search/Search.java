@@ -108,30 +108,36 @@ public class Search {
 
 	private PasswdFile searchUserByUid() throws JSchException, IOException {
 		// unixConnection.openExecChannel();
+//		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().userExists(
+//				filter.getAttributeValue()));
 		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().userExists(
-				filter.getAttributeValue()));
+				filter.getAttributeValue()), shellChannel);
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		PasswdFile passwdFile = new PasswdFile(getFileOutput(result.getOutput()));
 		return passwdFile;
 	}
 
 	private PasswdFile searchAllUsers() throws JSchException, IOException {
-		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllUser());
+//		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllUser());
+		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllUser(), shellChannel);
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		PasswdFile passwdFile = new PasswdFile(getFileOutput(result.getOutput()));
 		return passwdFile;
 	}
 
 	private GroupFile searchAllGroups() throws JSchException, IOException {
-		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllGroups());
+//		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllGroups());
+		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllGroups(), shellChannel);
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		GroupFile passwdFile = new GroupFile(getFileOutput(result.getOutput()));
 		return passwdFile;
 	}
 
 	private GroupFile searchGroupByUid() throws JSchException, IOException {
+//		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().groupExists(
+//				filter.getAttributeValue()));
 		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().groupExists(
-				filter.getAttributeValue()));
+				filter.getAttributeValue()), shellChannel);
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		GroupFile passwdFile = new GroupFile(getFileOutput(result.getOutput()));
 		return passwdFile;
@@ -210,16 +216,26 @@ public class Search {
 					CollectionUtil.newSet(passwdRow.getShell())));
 			bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.HOME.getName(),
 					CollectionUtil.newSet(passwdRow.getHomeDirectory())));
+			bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.UID.getName(),
+					CollectionUtil.newSet(passwdRow.getUserIdentifier())));
+
 
 			if (filter.isUid() && isEqual) {
+//				bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.GROUPS.getName(),
+//						EvaluateCommandsResultOutput
+//								.evaluateUserGroups(unixConnection.executeShell(
+//										UnixConnector.getCommandGenerator().userGroups(filter.getAttributeValue()))
+//										.getOutput())));
 				bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.GROUPS.getName(),
 						EvaluateCommandsResultOutput
 								.evaluateUserGroups(unixConnection.executeShell(
-										UnixConnector.getCommandGenerator().userGroups(filter.getAttributeValue()))
+										UnixConnector.getCommandGenerator().userGroups(filter.getAttributeValue()), shellChannel)
 										.getOutput())));
 			
+//				String shadowInfo = unixConnection.executeShell(
+//						UnixConnector.getCommandGenerator().userStatus(filter.getAttributeValue())).getOutput();
 				String shadowInfo = unixConnection.executeShell(
-						UnixConnector.getCommandGenerator().userStatus(filter.getAttributeValue())).getOutput();
+						UnixConnector.getCommandGenerator().userStatus(filter.getAttributeValue()), shellChannel).getOutput();
 				if (StringUtil.isNotBlank(shadowInfo)) {
 					String[] shadowAttrs = shadowInfo.split(":", 9);
 					bld.addAttribute(OperationalAttributes.LOCK_OUT_NAME,
@@ -239,10 +255,10 @@ public class Search {
 					}
 				}
 				
-				String userPermissions = unixConnection.executePermissionCommand(UnixConnector.getCommandGenerator().userPermissions(filter.getAttributeValue())).getOutput();
-				if (StringUtil.isNotBlank(userPermissions)) {
-					bld.addAttribute(SchemaAccountAttribute.PERMISIONS.getName(), EvaluateCommandsResultOutput.evaluateUserPermissions(userPermissions));
-				}
+//				String userPermissions = unixConnection.executePermissionCommand(UnixConnector.getCommandGenerator().userPermissions(filter.getAttributeValue()), shellChannel).getOutput();
+//				if (StringUtil.isNotBlank(userPermissions)) {
+//					bld.addAttribute(SchemaAccountAttribute.PERMISIONS.getName(), EvaluateCommandsResultOutput.evaluateUserPermissions(userPermissions));
+//				}
 
 			}
 			handler.handle(bld.build());

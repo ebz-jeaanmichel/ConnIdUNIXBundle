@@ -1,3 +1,19 @@
+/**
+ * Copyright (C) 2011 ConnId (connid-dev@googlegroups.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.connid.bundles.unix.methods;
 
 import java.io.IOException;
@@ -60,15 +76,20 @@ public class UnixCommon {
 	
 	public static void appendCreateOrUpdatePublicKeyCommand(StringBuilder commandBuilder, String username, Set<Attribute> attrs, boolean isUpdate){
 		Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
-		if (publiKey != null && publiKey.getValue() != null && !publiKey.getValue().isEmpty()){
-			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().createSshKeyDir(username));
-			if (isUpdate){
-				appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "777", "777"));
+		if (publiKey != null){
+			if (publiKey.getValue() != null && !publiKey.getValue().isEmpty()){
+			
+				appendCommand(commandBuilder, UnixConnector.getCommandGenerator().createSshKeyDir(username));
+				if (isUpdate){
+					appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "777", "777"));
+				}
+				String pubKeyCommand = UnixConnector.getCommandGenerator().setPublicKey(username, (String) publiKey.getValue().get(0));
+				appendCommand(commandBuilder, pubKeyCommand);
+				appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "700", "600"));
+				appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyOwner(username));
+			} else{
+				appendDeletePublicKeyCommand(commandBuilder, username, attrs);
 			}
-			String pubKeyCommand = UnixConnector.getCommandGenerator().setPublicKey(username, (String) publiKey.getValue().get(0));
-			appendCommand(commandBuilder, pubKeyCommand);
-			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "700", "600"));
-			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyOwner(username));
 		}
 	}
 	
@@ -79,10 +100,14 @@ public class UnixCommon {
 		} else {
 			permissions = AttributeUtil.find(SchemaGroupAttribute.PERMISSIONS.getName(), attrs);
 		}
-		if (permissions != null && permissions.getValue() != null && !permissions.getValue().isEmpty()){
-			String permissionsCommand = UnixConnector.getCommandGenerator().setPermissions(isUser ? username : "%"+username, (String) permissions.getValue().get(0), isUser);
-			appendCommand(commandBuilder, permissionsCommand);
-		}
+		if (permissions != null){
+			if (permissions.getValue() != null && !permissions.getValue().isEmpty()){
+				String permissionsCommand = UnixConnector.getCommandGenerator().setPermissions(isUser ? username : "%"+username, (String) permissions.getValue().get(0), isUser);
+				appendCommand(commandBuilder, permissionsCommand);
+			} else {
+				appendRemovePermissions(commandBuilder, username, isUser);
+			}
+		} 
 	}
 	
 	public static void appendRemovePermissions(StringBuilder commandBuilder, String username, boolean isUser){
@@ -93,7 +118,8 @@ public class UnixCommon {
 
 	public static void appendDeletePublicKeyCommand(StringBuilder commandBuilder, String username, Set<Attribute> attrs){
 		Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
-		if (publiKey != null && publiKey.getValue() != null && !publiKey.getValue().isEmpty()){
+		if (publiKey != null){
+			LOG.ok("Preparing command for deleting public key");
 			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().removeSshKeyDir(username));
 		}
 	}
