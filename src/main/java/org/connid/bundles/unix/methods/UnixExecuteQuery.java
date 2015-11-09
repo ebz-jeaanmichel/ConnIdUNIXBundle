@@ -69,12 +69,13 @@ public class UnixExecuteQuery {
             throw new IllegalStateException("Wrong object class");
         }
 
-        if (filter == null) {
-            throw new ConnectorException("Filter is null");
-        }
+        	
         ChannelShell shellChannel = null;
         try{
         	shellChannel = connection.createShellChannel();
+        	if (filter == null){
+        		new Search(shellChannel, connection, handler, objectClass, null).searchAll();
+        	}
         switch (filter.getOperator()) {
             case EQ:
                 new Search(shellChannel, connection, handler, objectClass, filter).equalSearch();

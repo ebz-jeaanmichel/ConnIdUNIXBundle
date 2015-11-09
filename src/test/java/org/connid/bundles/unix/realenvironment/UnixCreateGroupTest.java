@@ -15,11 +15,24 @@
  */
 package org.connid.bundles.unix.realenvironment;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import org.connid.bundles.unix.UnixConnector;
+import org.connid.bundles.unix.schema.SchemaAccountAttribute;
+import org.connid.bundles.unix.schema.SchemaGroupAttribute;
+import org.connid.bundles.unix.search.Operand;
+import org.connid.bundles.unix.search.Operator;
 import org.connid.bundles.unix.utilities.AttributesTestValue;
 import org.connid.bundles.unix.utilities.SharedTestMethods;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.After;
 import org.junit.Assert;
@@ -55,6 +68,32 @@ public class UnixCreateGroupTest extends SharedTestMethods {
             groupExists = true;
         }
         Assert.assertTrue(groupExists);
+        connector.delete(ObjectClass.GROUP, newAccount, null);
+    }
+    
+    @Test
+    public final void createGroupWithPermissions() {
+        
+        Set<Attribute> attributes = createSetOfAttributes(name, attrs.getPassword(), true);
+        StringBuilder permissions = new StringBuilder("HOST=(ALL) NOPASSWD: /usr/sbin/useradd,/usr/sbin/usermod,/usr/sbin/userdel,/usr/sbin/groupadd,/usr/sbin/groupmod,/usr/sbin/groupdel,/bin/mv,/usr/bin/passwd,/usr/bin/getent,/bin/echo,/usr/bin/tee,/bin/chown,/bin/chmod,/bin/mkdir,/usr/bin/groups,/usr/bin/id,/usr/bin/replace,/bin/rm,/bin/sudo");
+
+		attributes.add(AttributeBuilder.build(SchemaGroupAttribute.PERMISSIONS.getName(), permissions.toString()));
+		
+        newAccount = connector.create(ObjectClass.GROUP, attributes, null);
+        final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
+        connector.executeQuery(ObjectClass.GROUP,
+				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
+
+					@Override
+					public boolean handle(final ConnectorObject connObj) {
+						actual.add(connObj);
+						return true;
+					}
+				}, null);
+		for (ConnectorObject connObj : actual) {
+			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
+		}
+        
         connector.delete(ObjectClass.GROUP, newAccount, null);
     }
 

@@ -26,16 +26,16 @@ public class General {
     }
 
     public static String searchUserIntoPasswdFile(final String username) {
-        return "getent passwd | grep ^" + username + ":";
+        return "getent passwd | grep --color=never ^" + username + ":";
     }
 
     public static String searchGroupIntoGroupFile(String groupname) {
-        return "getent group | grep ^" + groupname + ":";
+        return "getent group | grep --color=never ^" + groupname + ":";
     }
 
     //shadow
     public static String searchUserStatusIntoShadowFile(final String username) {
-        return "getent shadow | grep ^" + username + ":";
+        return "getent shadow | grep --color=never ^" + username + ":";
     }
     
     public static String searchGroupsForUser(final String username) {
@@ -43,7 +43,11 @@ public class General {
     }
     
     public static String getUserPermissions(final String username) {
-    	return "sudo -l -U " + username;
+    	return "cat /etc/sudoers.d/" + username + "_user";
+    }
+    
+    public static String getGroupPermissions(final String username) {
+    	return "cat /etc/sudoers.d/%" + username + "_group";
     }
     
     public static String mkdirSsh(final String username){

@@ -72,6 +72,7 @@ public class UnixConnection {
 
 	Map<UnixConfiguration, ChannelShell> shellChannels = new HashMap<UnixConfiguration, ChannelShell>();
 
+//	Session session;
 	public Map<UnixConfiguration, Session> getSessions() {
 		return sessions;
 	}
@@ -99,7 +100,7 @@ public class UnixConnection {
 			return;
 		} else {
 			try {
-				initSession(unixConfiguration);
+				session = initSession(unixConfiguration);
 			} catch (JSchException e) {
 				throw new ConnectorException(e.getMessage(), e);
 			}
@@ -149,6 +150,8 @@ public class UnixConnection {
 	public UnixResult execute(final String command) throws JSchException, IOException {
 		Session session = getInitializedSession();
 
+		LOG.ok("Executing on: {0}", session.getHost());
+		
 		ChannelExec execChannel = createExecChannel(session, command);
 		LOG.ok("Command to execute: " + command);
 		execChannel.setCommand(command);
@@ -160,7 +163,7 @@ public class UnixConnection {
 	}
 
 //	InputStream errorShell;
-//	private OutputStream toServerShell;
+	private OutputStream toServerShell;
 	PipedOutputStream  pinIN;
 //	private BufferedReader fromServerShell;
 	public ChannelShell createShellChannel() throws JSchException, IOException {
@@ -171,9 +174,9 @@ public class UnixConnection {
 			shellChannel.setPty(unixConfiguration.isUsePty());
 			shellChannel.setPtyType(unixConfiguration.getPtyType());
 			
-//			toServerShell = shellChannel.getOutputStream();
+			toServerShell = shellChannel.getOutputStream();
 
-			shellChannel.connect();
+			shellChannel.connect(5000);
 			LOG.ok("Got shellChannel " + shellChannel.getId() + " => " + shellChannel.getSession().getHost());
 			
 			LOG.ok("Connected status " + shellChannel.isConnected());
@@ -197,12 +200,12 @@ public UnixResult executeShell(String command, ChannelShell shellChannel) throws
 		
 		LOG.info("Executing shellChannel => closed: {0}, connected: {1}, EOF: {2}" ,  shellChannel.isClosed(), shellChannel.isConnected(), shellChannel.isEOF());
 		
-		OutputStream toServerShell = shellChannel.getOutputStream();
+//		OutputStream toServerShell = shellChannel.getOutputStream();
 		
 		InputStream outputstream_from_the_channel = shellChannel.getInputStream();
 		InputStream errorstream_from_the_channel = shellChannel.getExtInputStream();
 		
-//		toServerShell.notify();
+		LOG.ok("Command to execute: {0}", command);
 		toServerShell.write((command + "\r\n").getBytes());
 		toServerShell.flush();
 
@@ -214,55 +217,13 @@ public UnixResult executeShell(String command, ChannelShell shellChannel) throws
 	
 	}
 
-//	public UnixResult executePermissionCommand(String command) throws JSchException, IOException {
-//		
-//
-//		ChannelShell shellChannel = createShellChannel();
-//		PrintStream commander = new PrintStream(toServerShell, true);
-//
-//		InputStream outputstream_from_the_channel = shellChannel.getInputStream();
-//		InputStream errorstream_from_the_channel = shellChannel.getExtInputStream();
-//		shellChannel.setPty(unixConfiguration.isUsePty());
-//		commander.print(command + "\n");
-//		sleep(500);
-//		commander.print(Utilities.getPlainPassword(unixConfiguration.getPassword()) + "\n");
-//		sleep(100);
-//		commander.print("\n");
-//		//fromServer, errorShell, c
-//		UnixResult result = readOutput(new ReadShellOutputThread(shellChannel, outputstream_from_the_channel, errorstream_from_the_channel, command, unixConfiguration));
-//		shellChannel.disconnect();
-//		return result;
-//
-//	}
-
-public UnixResult executePermissionCommand(String command, ChannelShell shellChannel) throws JSchException, IOException {
-	
-
-//	ChannelShell shellChannel = createShellChannel();
-	OutputStream toServerShell = shellChannel.getOutputStream();
-	PrintStream commander = new PrintStream(toServerShell, true);
-
-	InputStream outputstream_from_the_channel = shellChannel.getInputStream();
-	InputStream errorstream_from_the_channel = shellChannel.getExtInputStream();
-	shellChannel.setPty(unixConfiguration.isUsePty());
-	commander.print(command + "\n");
-	sleep(500);
-	commander.print(Utilities.getPlainPassword(unixConfiguration.getPassword()) + "\n");
-	sleep(100);
-	commander.print("\n");
-	//fromServer, errorShell, c
-	UnixResult result = readOutput(new ReadShellOutputThread(shellChannel, outputstream_from_the_channel, errorstream_from_the_channel, command, unixConfiguration));
-//	shellChannel.disconnect();
-	return result;
-
-}
 
 	public UnixResult execute(final String command, final String password) throws JSchException, IOException {
 		Session session = getSessions().get(unixConfiguration);
 		if (session == null || !session.isConnected()) {
-			initSession(unixConfiguration);
+			session = initSession(unixConfiguration);
 			// session.connect(unixConfiguration.getSshConnectionTimeout());
-			session = getSessions().get(unixConfiguration);
+//			session = getSessions().get(unixConfiguration);
 		}
 		if (execChannel == null || !execChannel.isConnected()) {
 			execChannel = (ChannelExec) session.openChannel("exec");
@@ -320,9 +281,9 @@ public UnixResult executePermissionCommand(String command, ChannelShell shellCha
 	public void testConnection() throws Exception {
 		Session session = getSessions().get(unixConfiguration);
 		if (session == null || !session.isConnected()) {
-			initSession(unixConfiguration);
-			// session.connect(unixConfiguration.getSshConnectionTimeout());
-			session = getSessions().get(unixConfiguration);
+			session = initSession(unixConfiguration);
+//			 session.connect(unixConfiguration.getSshConnectionTimeout());
+//			session = getSessions().get(unixConfiguration);
 		}
 		// session.connect(unixConfiguration.getSshConnectionTimeout());
 		// keepAlive();
@@ -331,9 +292,9 @@ public UnixResult executePermissionCommand(String command, ChannelShell shellCha
 	public void authenticate(final String username, final String password) throws JSchException, IOException {
 		Session session = getSessions().get(unixConfiguration);
 		if (session == null || !session.isConnected()) {
-			initSession(unixConfiguration);
+			session = initSession(unixConfiguration);
 			// session.connect(unixConfiguration.getSshConnectionTimeout());
-			session = getSessions().get(unixConfiguration);
+//			session = getSessions().get(unixConfiguration);
 		}
 		session = jSch.getSession(username, unixConfiguration.getHostname(), unixConfiguration.getPort());
 		session.setPassword(password);

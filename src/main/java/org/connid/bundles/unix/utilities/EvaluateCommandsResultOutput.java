@@ -83,9 +83,9 @@ public class EvaluateCommandsResultOutput {
     
     }
     
-    public static String evaluateUserPermissions(String permissions){
-    	String [] normalized = permissions.split("\n");
-    	return normalized[normalized.length-1];
+    public static String evaluatePermissions(String username, String permissions){
+    	String normalized = permissions.replaceAll(username + " ", "");
+    	return normalized;
     }
     
     public static boolean evaluateUserActivationStatus(

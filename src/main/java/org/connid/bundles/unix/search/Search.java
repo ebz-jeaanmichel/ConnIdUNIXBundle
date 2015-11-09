@@ -92,6 +92,17 @@ public class Search {
 		this.filter = filter;
 	
 	}
+	
+	public void searchAll() throws JSchException, IOException, InterruptedException{
+		if (objectClass.equals(ObjectClass.ACCOUNT)) {
+			PasswdFile passwdFile = searchAllUsers();
+			fillUserHandler(passwdFile.getPasswdRows(), false);
+		} else if (objectClass.equals(ObjectClass.GROUP)) {
+			GroupFile groupFile = searchAllGroups();
+			fillGroupHandler(groupFile.getGroupRows());
+		}
+
+	}
 
 	public void equalSearch() throws IOException, InterruptedException, JSchException {
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
@@ -192,7 +203,7 @@ public class Search {
 	private void fillUserHandler(final List<PasswdRow> passwdRows, boolean isEqual) throws ConnectException, IOException,
 			InterruptedException, JSchException {
 		if (passwdRows == null) {
-			if (isEqual && filter.isUid()){
+			if (isEqual && filter != null && filter.isUid()){
 				throw new UnknownUidException("Could not find user with uid " + filter.getAttributeValue());
 			}
 			return;
@@ -220,7 +231,7 @@ public class Search {
 					CollectionUtil.newSet(passwdRow.getUserIdentifier())));
 
 
-			if (filter.isUid() && isEqual) {
+//			if (filter.isUid() && isEqual) {
 //				bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.GROUPS.getName(),
 //						EvaluateCommandsResultOutput
 //								.evaluateUserGroups(unixConnection.executeShell(
@@ -229,13 +240,13 @@ public class Search {
 				bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.GROUPS.getName(),
 						EvaluateCommandsResultOutput
 								.evaluateUserGroups(unixConnection.executeShell(
-										UnixConnector.getCommandGenerator().userGroups(filter.getAttributeValue()), shellChannel)
+										UnixConnector.getCommandGenerator().userGroups(passwdRow.getUsername()), shellChannel)
 										.getOutput())));
 			
 //				String shadowInfo = unixConnection.executeShell(
 //						UnixConnector.getCommandGenerator().userStatus(filter.getAttributeValue())).getOutput();
 				String shadowInfo = unixConnection.executeShell(
-						UnixConnector.getCommandGenerator().userStatus(filter.getAttributeValue()), shellChannel).getOutput();
+						UnixConnector.getCommandGenerator().userStatus(passwdRow.getUsername()), shellChannel).getOutput();
 				if (StringUtil.isNotBlank(shadowInfo)) {
 					String[] shadowAttrs = shadowInfo.split(":", 9);
 					bld.addAttribute(OperationalAttributes.LOCK_OUT_NAME,
@@ -255,12 +266,18 @@ public class Search {
 					}
 				}
 				
-//				String userPermissions = unixConnection.executePermissionCommand(UnixConnector.getCommandGenerator().userPermissions(filter.getAttributeValue()), shellChannel).getOutput();
-//				if (StringUtil.isNotBlank(userPermissions)) {
-//					bld.addAttribute(SchemaAccountAttribute.PERMISIONS.getName(), EvaluateCommandsResultOutput.evaluateUserPermissions(userPermissions));
-//				}
+				String userPermissions = unixConnection.executeShell(UnixConnector.getCommandGenerator().userPermissions(passwdRow.getUsername()), shellChannel).getOutput();
+				if (StringUtil.isNotBlank(userPermissions)) {
+					String evaluated = EvaluateCommandsResultOutput.evaluatePermissions(passwdRow.getUsername(), userPermissions);
+					LOG.ok("Evaluated permissions: {0}", evaluated);
+					if (!evaluated.contains("No such file or directory")){
+						bld.addAttribute(SchemaAccountAttribute.PERMISIONS.getName(), evaluated);
+					} else {
+						LOG.ok("No permissions for user {0}", passwdRow.getUsername());
+					}
+				}
 
-			}
+//			}
 			handler.handle(bld.build());
 		}
 		
@@ -284,7 +301,15 @@ public class Search {
 			bld.addAttribute(AttributeBuilder.build(SchemaGroupAttribute.GID.getName(),
 					CollectionUtil.newSet(groupRow.getGroupIdentifier())));
 
-			if (filter.isUid()){
+			String userPermissions = unixConnection.executeShell(UnixConnector.getCommandGenerator().groupPermissions(groupRow.getGroupname()), shellChannel).getOutput();
+			if (StringUtil.isNotBlank(userPermissions)) {
+				String evaluated = EvaluateCommandsResultOutput.evaluatePermissions("%"+groupRow.getGroupname(), userPermissions);
+				LOG.ok("Evaluated permissions: {0}", evaluated);
+				if (!evaluated.contains("No such file or directory")){
+					bld.addAttribute(SchemaGroupAttribute.PERMISSIONS.getName(), evaluated);
+				} else {
+					LOG.ok("No permissions for group {0}", groupRow.getGroupname());
+				}
 				
 			}
 			

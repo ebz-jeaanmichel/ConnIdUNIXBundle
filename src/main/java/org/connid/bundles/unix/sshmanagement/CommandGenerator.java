@@ -102,6 +102,16 @@ public class CommandGenerator {
     	return commandToExecute.append(General.getUserPermissions(username)).toString();
     }
     
+    public String groupPermissions(final String username) {
+    	StringBuilder commandToExecute = new StringBuilder();
+    	if (!unixConfiguration.isRoot()){
+    		Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
+    		commandToExecute.append(sudoCommand.sudo());
+    	}
+    	
+    	return commandToExecute.append(General.getGroupPermissions(username)).toString();
+    }
+    
     public String buildRemoveFromGroupsCommand(final String username, final List<Object> values){
     	StringBuilder commandToExecute = new StringBuilder();
     	if (!unixConfiguration.isRoot()) {
@@ -330,8 +340,13 @@ public class CommandGenerator {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        commandToExecute.append(groupModCommand.groupMod());
-        return commandToExecute.toString();
+        String groupMod = groupModCommand.groupMod();
+        if (StringUtil.isNotBlank(groupMod)){
+        	commandToExecute.append(groupMod);
+        	return commandToExecute.toString();
+        } 
+
+        return null;        
     }
     
     public String renamePrimaryGroup(final String actualGroupName,

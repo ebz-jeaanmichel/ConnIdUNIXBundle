@@ -31,6 +31,10 @@ public class GroupFile {
     public GroupFile(final List<String> groupFile) {
         setGroupRows(groupFile);
     }
+    
+    public List<GroupRow> getGroupRows() {
+		return groupRows;
+	}
 
     private void setGroupRows(final List<String> groupFile) {
         for (Iterator<String> it = groupFile.iterator(); it.hasNext();) {

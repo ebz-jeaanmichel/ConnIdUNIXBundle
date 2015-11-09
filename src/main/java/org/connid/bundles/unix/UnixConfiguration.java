@@ -43,7 +43,7 @@ public class UnixConfiguration extends AbstractConfiguration {
 
     private boolean root = false;
     
-    private boolean usePty = false;
+    private boolean usePty = true;
     
     private String ptyType = "vt100";
 
@@ -51,7 +51,7 @@ public class UnixConfiguration extends AbstractConfiguration {
 
     private long readTimeout = 1000000;
     
-    private long timeToWait = 1000;
+    private long timeToWait = 10;
     
 //    private String commentAttribute = "";
 

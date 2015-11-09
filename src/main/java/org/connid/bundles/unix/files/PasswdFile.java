@@ -30,6 +30,10 @@ public class PasswdFile {
     public PasswdFile(final List<String> passwdFile) {
         setPasswdRows(passwdFile);
     }
+    
+    public List<PasswdRow> getPasswdRows() {
+		return passwdRows;
+	}
 
     private void setPasswdRows(final List<String> passwdFile) {
         for (Iterator<String> it = passwdFile.iterator(); it.hasNext();) {
