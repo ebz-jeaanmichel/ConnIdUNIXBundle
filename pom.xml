@@ -70,7 +70,7 @@
 
 	<properties>
 		<base.version>1.4.0.0</base.version>
-		<jsch.version>0.1.51</jsch.version>
+		<jsch.version>0.1.53</jsch.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
@@ -316,7 +316,7 @@
 								${project.version}
 							</ConnectorBundle-Version>
 							<Class-Path>
-								lib/jsch-0.1.51.jar
+								lib/jsch-0.1.53.jar
 							</Class-Path>
 
 						</manifestEntries>

@@ -61,11 +61,11 @@ public class UnixUpdate {
 
 	private ObjectClass objectClass = null;
 
-	public UnixUpdate(final ObjectClass oc, final UnixConfiguration unixConfiguration, final Uid uid,
+	public UnixUpdate(final ObjectClass oc, final UnixConnection unixConnection, final Uid uid,
 			final Set<Attribute> attrs) throws IOException, JSchException {
 		this.uid = uid;
 		this.attrs = attrs;
-		unixConnection = UnixConnection.openConnection(unixConfiguration);
+		this.unixConnection = unixConnection;
 		objectClass = oc;
 	}
 
@@ -161,7 +161,7 @@ public class UnixUpdate {
 			if (isAdd) {
 				UnixCommon.processPassword(unixConnection, newUserNameValue, attrs);
 			} else {
-				UnixCommon.resetPassword(unixConnection, newUserNameValue);
+				UnixCommon.resetPassword(unixConnection, newUserNameValue, attrs);
 			}
 
 		} else if (objectClass.equals(ObjectClass.GROUP)) {

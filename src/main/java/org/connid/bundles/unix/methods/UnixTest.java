@@ -28,8 +28,8 @@ public class UnixTest {
 
     private UnixConnection unixConnection = null;
 
-    public UnixTest(final UnixConfiguration unixConfiguration) throws IOException, JSchException {
-        unixConnection = UnixConnection.openConnection(unixConfiguration);
+    public UnixTest(final UnixConnection unixConnection) throws IOException, JSchException {
+        this.unixConnection = unixConnection;
     }
 
     public final void test() {

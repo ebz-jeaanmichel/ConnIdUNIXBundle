@@ -55,23 +55,20 @@ public class Search {
 
 	private Operand filter = null;
 
-	private UnixConfiguration unixConfiguration = null;
-
 	private ObjectClass objectClass = null;
 
 	private ResultsHandler handler = null;
 
 	private ChannelShell shellChannel;
 	
-	public Search(final UnixConfiguration unixConfiguration, final UnixConnection unixConnection,
-			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
-		this.unixConfiguration = unixConfiguration;
-		this.unixConnection = unixConnection;
-		this.handler = handler;
-		this.objectClass = oc;
-		this.filter = filter;
-	
-	}
+//	public Search(final UnixConnection unixConnection,
+//			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
+//		this.unixConnection = unixConnection;
+//		this.handler = handler;
+//		this.objectClass = oc;
+//		this.filter = filter;
+//	
+//	}
 	
 	public Search(final ChannelShell shellChannel, final UnixConnection unixConnection,
 			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
@@ -83,15 +80,15 @@ public class Search {
 	
 	}
 	
-	public Search(final UnixConnection unixConnection,
-			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
-//		this.shellChannel = shellChannel;
-		this.unixConnection = unixConnection;
-		this.handler = handler;
-		this.objectClass = oc;
-		this.filter = filter;
-	
-	}
+//	public Search(final UnixConnection unixConnection,
+//			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
+////		this.shellChannel = shellChannel;
+//		this.unixConnection = unixConnection;
+//		this.handler = handler;
+//		this.objectClass = oc;
+//		this.filter = filter;
+//	
+//	}
 	
 	public void searchAll() throws JSchException, IOException, InterruptedException{
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {

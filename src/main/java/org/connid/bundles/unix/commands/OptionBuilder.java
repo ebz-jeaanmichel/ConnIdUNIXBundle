@@ -97,8 +97,8 @@ public class OptionBuilder {
 					userCommand.append(accountAttr.getCommand()).append(" ");
 				}
 			} else {
-				userCommand.append(accountAttr.getCommand()).append(" '");
-				userCommand.append(value).append("' ");
+				userCommand.append(accountAttr.getCommand()).append(" \"");
+				userCommand.append(value).append("\" ");
 
 			}
 		}

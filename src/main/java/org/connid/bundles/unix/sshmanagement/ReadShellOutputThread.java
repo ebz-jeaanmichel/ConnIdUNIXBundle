@@ -97,6 +97,8 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 			if (afterTrim.contains("No such file or directory") || afterTrim.contains("Last login")) {
 				continue;
 			}
+			
+			
 
 			if (normalize(afterTrim, toCompare, toReturn)) {
 				continue;
@@ -108,6 +110,11 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 			}
 
 		}
+		
+		if (toReturn.toString().startsWith(configuration.getShell())){
+			toReturn = new StringBuilder(toReturn.toString().substring(2));
+		}
+		
 		return toReturn.toString();
 	}
 

@@ -43,11 +43,11 @@ public class UnixExecuteQuery {
 
     private ObjectClass objectClass = null;
 
-    public UnixExecuteQuery(final UnixConfiguration configuration,
+    public UnixExecuteQuery(final UnixConnection connection,
             final ObjectClass oc, final Operand filter,
             final ResultsHandler rh) throws IOException, JSchException {
-        connection = UnixConnection.openConnection(configuration);
-        unixConfiguration = configuration;
+        this.connection = connection;
+//        unixConfiguration = configuration;
         this.filter = filter;
         handler = rh;
         objectClass = oc;

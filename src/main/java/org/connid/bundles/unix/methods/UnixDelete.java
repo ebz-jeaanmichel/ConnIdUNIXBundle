@@ -44,9 +44,9 @@ public class UnixDelete {
 
 	private ObjectClass objectClass = null;
 
-	public UnixDelete(final ObjectClass oc, final UnixConfiguration unixConfiguration, final Uid uid)
+	public UnixDelete(final ObjectClass oc, final UnixConnection unixConnection, final Uid uid)
 			throws IOException, JSchException {
-		unixConnection = UnixConnection.openConnection(unixConfiguration);
+		this.unixConnection = unixConnection;
 		this.uid = uid;
 		objectClass = oc;
 	}

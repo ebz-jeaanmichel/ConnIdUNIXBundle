@@ -49,10 +49,10 @@ public class UnixCreate {
 
 	boolean status = false;
 
-	public UnixCreate(final ObjectClass oc, final UnixConfiguration unixConfiguration, final Set<Attribute> attributes)
+	public UnixCreate(final ObjectClass oc, final UnixConnection unixConnection, final Set<Attribute> attributes)
 			throws IOException, JSchException {
 		this.attrs = attributes;
-		unixConnection = UnixConnection.openConnection(unixConfiguration);
+		this.unixConnection = unixConnection;
 		objectClass = oc;
 	}
 

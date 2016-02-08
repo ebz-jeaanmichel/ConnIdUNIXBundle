@@ -40,10 +40,11 @@ public class UnixAuthenticate {
     private ObjectClass objectClass;
 
     public UnixAuthenticate(final ObjectClass oc,
-            final UnixConfiguration unixConfiguration,
+            final UnixConnection unixConnection,
             final String username, final GuardedString password)
             throws IOException, JSchException {
-        unixConnection = UnixConnection.openConnection(unixConfiguration);
+    	this.unixConnection = unixConnection;
+//        unixConnection = UnixConnection.openConnection(unixConfiguration);
         this.username = username;
         this.password = password;
         objectClass = oc;
