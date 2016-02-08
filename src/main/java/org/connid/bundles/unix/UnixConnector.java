@@ -15,8 +15,6 @@
  */
 package org.connid.bundles.unix;
 
-import com.jcraft.jsch.JSchException;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,15 +32,30 @@ import org.connid.bundles.unix.search.Operator;
 import org.connid.bundles.unix.sshmanagement.CommandGenerator;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.api.operations.SchemaApiOp;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.Schema;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.FilterTranslator;
 import org.identityconnectors.framework.spi.Configuration;
-import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.spi.PoolableConnector;
-import org.identityconnectors.framework.spi.operations.*;
+import org.identityconnectors.framework.spi.operations.AuthenticateOp;
+import org.identityconnectors.framework.spi.operations.CreateOp;
+import org.identityconnectors.framework.spi.operations.DeleteOp;
+import org.identityconnectors.framework.spi.operations.ResolveUsernameOp;
+import org.identityconnectors.framework.spi.operations.SchemaOp;
+import org.identityconnectors.framework.spi.operations.SearchOp;
+import org.identityconnectors.framework.spi.operations.TestOp;
+import org.identityconnectors.framework.spi.operations.UpdateAttributeValuesOp;
+import org.identityconnectors.framework.spi.operations.UpdateOp;
+
+import com.jcraft.jsch.JSchException;
 
 @ConnectorClass(configurationClass = UnixConfiguration.class, displayNameKey = "unix.connector.display")
 public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, DeleteOp, TestOp,
@@ -82,19 +95,13 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, Del
 
 	@Override
 	public final void dispose() {
-		// try {
-
+	
 		if (unixConnection != null) {
 			unixConnection.disconnect();
 			unixConnection = null;
 		}
 		unixConfiguration = null;
 		commandGenerator = null;
-		// } catch (IOException ex) {
-		// LOG.error("Error in connection process", ex);
-		// } catch (JSchException jse) {
-		// LOG.error("Error in connection process", jse);
-		// }
 	}
 
 	@Override

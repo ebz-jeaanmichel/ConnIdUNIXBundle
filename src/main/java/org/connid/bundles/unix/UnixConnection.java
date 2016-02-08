@@ -15,17 +15,9 @@
  */
 package org.connid.bundles.unix;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -54,8 +46,6 @@ public class UnixConnection {
 
 	private static final Log LOG = Log.getLog(UnixConnection.class);
 
-	private UnixConnection unixConnection = null;
-
 	private UnixConfiguration unixConfiguration = null;
 
 	private ChannelExec execChannel;
@@ -68,27 +58,9 @@ public class UnixConnection {
 
 	private static JSch jSch = new JSch();
 
-//	Map<UnixConfiguration, Session> sessions = new HashMap<UnixConfiguration, Session>();
-
-	Map<UnixConfiguration, ChannelShell> shellChannels = new HashMap<UnixConfiguration, ChannelShell>();
-
 	private Session session;
-//	public Map<UnixConfiguration, Session> getSessions() {
-//		return sessions;
-//	}
-
-//	public static UnixConnection openConnection(final UnixConfiguration unixConfiguration)
-//			throws IOException, JSchException {
-//		if (unixConnection == null) {
-//			unixConnection = new UnixConnection(unixConfiguration);
-//		} else {
-//			unixConnection.setUnixConfuguration(unixConfiguration);
-//		}
-//		return unixConnection;
-//	}
 
 	public void checkAlive(UnixConfiguration unixConfiguration) {
-//		Session session = sessions.get(unixConfiguration);
 
 		if (session != null && session.isConnected()) {
 			try {
@@ -105,7 +77,6 @@ public class UnixConnection {
 				throw new ConnectorException(e.getMessage(), e);
 			}
 		}
-//		session = sessions.get(unixConfiguration);
 		if (!session.isConnected()) {
 			throw new ConnectionFailedException("Connection no more alive");
 		}
@@ -123,16 +94,11 @@ public class UnixConnection {
 		session.setConfig(Constants.STRICT_HOST_KEY_CHECKING, "no");
 		session.connect(unixConfiguration.getSshConnectionTimeout());
 		session.setServerAliveInterval(5000);
-//		sessions.put(unixConfiguration, session);
 		return session;
 	}
 
-//	private void setUnixConfuguration(final UnixConfiguration unixConfiguration) {
-//		UnixConnection.unixConfiguration = unixConfiguration;
-//	}
 	
 	private Session getInitializedSession() throws JSchException{
-//		Session session = getSessions().get(unixConfiguration);
 		if (session == null || !session.isConnected()) {
 			session = initSession(unixConfiguration);
 		}
@@ -156,16 +122,11 @@ public class UnixConnection {
 		LOG.ok("Command to execute: " + command);
 		execChannel.setCommand(command);
 		execChannel.connect(unixConfiguration.getSshConnectionTimeout());
-		sleep(unixConfiguration.getTimeToWait());
 		LOG.ok("Reading output");
-		// keepAlive();
 		return readOutput(new ReadOutputThread(fromServer, errorStream, execChannel));
 	}
 
-//	InputStream errorShell;
-	private OutputStream toServerShell;
-	PipedOutputStream  pinIN;
-//	private BufferedReader fromServerShell;
+//	private OutputStream toServerShell;
 	public ChannelShell createShellChannel() throws JSchException, IOException {
 		Session session = getInitializedSession();
 
@@ -174,7 +135,7 @@ public class UnixConnection {
 			shellChannel.setPty(unixConfiguration.isUsePty());
 			shellChannel.setPtyType(unixConfiguration.getPtyType());
 			
-			toServerShell = shellChannel.getOutputStream();
+//			toServerShell = shellChannel.getOutputStream();
 
 			shellChannel.connect(5000);
 			LOG.ok("Got shellChannel " + shellChannel.getId() + " => " + shellChannel.getSession().getHost());
@@ -200,7 +161,7 @@ public UnixResult executeShell(String command, ChannelShell shellChannel) throws
 		
 		LOG.info("Executing shellChannel => closed: {0}, connected: {1}, EOF: {2}" ,  shellChannel.isClosed(), shellChannel.isConnected(), shellChannel.isEOF());
 		
-//		OutputStream toServerShell = shellChannel.getOutputStream();
+		OutputStream toServerShell = shellChannel.getOutputStream();
 		
 		InputStream outputstream_from_the_channel = shellChannel.getInputStream();
 		InputStream errorstream_from_the_channel = shellChannel.getExtInputStream();
@@ -222,8 +183,6 @@ public UnixResult executeShell(String command, ChannelShell shellChannel) throws
 		Session session = getInitializedSession();//getSessions().get(unixConfiguration);
 		if (session == null || !session.isConnected()) {
 			session = initSession(unixConfiguration);
-			// session.connect(unixConfiguration.getSshConnectionTimeout());
-//			session = getSessions().get(unixConfiguration);
 		}
 		if (execChannel == null || !execChannel.isConnected()) {
 			execChannel = (ChannelExec) session.openChannel("exec");
@@ -239,12 +198,11 @@ public UnixResult executeShell(String command, ChannelShell shellChannel) throws
 		if (StringUtil.isNotBlank(password)) {
 			out.write((password + "\n").getBytes());
 			out.flush();
-			sleep(100);
+			sleep(unixConfiguration.getTimeToWait());
 			out.write((password + "\n").getBytes());
 			out.flush();
-			sleep(100);
+			sleep(unixConfiguration.getTimeToWait());
 		}
-		// keepAlive();
 		return readOutput(new ReadOutputThread(fromServer, errorStream, execChannel));
 	}
 
@@ -282,19 +240,13 @@ public UnixResult executeShell(String command, ChannelShell shellChannel) throws
 		Session session = getInitializedSession(); //Session session = getSessions().get(unixConfiguration);
 		if (session == null || !session.isConnected()) {
 			session = initSession(unixConfiguration);
-//			 session.connect(unixConfiguration.getSshConnectionTimeout());
-//			session = getSessions().get(unixConfiguration);
 		}
-		// session.connect(unixConfiguration.getSshConnectionTimeout());
-		// keepAlive();
 	}
 
 	public void authenticate(final String username, final String password) throws JSchException, IOException {
 		Session session = getInitializedSession(); //Session session = getSessions().get(unixConfiguration);
 		if (session == null || !session.isConnected()) {
 			session = initSession(unixConfiguration);
-			// session.connect(unixConfiguration.getSshConnectionTimeout());
-//			session = getSessions().get(unixConfiguration);
 		}
 		session = jSch.getSession(username, unixConfiguration.getHostname(), unixConfiguration.getPort());
 		session.setPassword(password);
@@ -312,25 +264,11 @@ public UnixResult executeShell(String command, ChannelShell shellChannel) throws
 			shellChannel.disconnect();
 			LOG.info("Channel Shell is disconnected.");
 		}
-//		Session session = getSessions().get(unixConfiguration);
-
 		if (session != null && session.isConnected()) {
 			session.disconnect();
 			LOG.info("Session is disconnected.");
 		}
 	}
 
-	// private void keepAlive() {
-	// try {
-	// Session session = getSessions().get(unixConfiguration);
-	// if (session == null || !session.isConnected()) {
-	// initSession(unixConfiguration);
-	// // session.connect(unixConfiguration.getSshConnectionTimeout());
-	// session = getSessions().get(unixConfiguration);
-	// }
-	// session.sendKeepAliveMsg();
-	// } catch (Exception e) {
-	// throw new ConnectorException(e.getMessage(), e);
-	// }
-	// }
+
 }

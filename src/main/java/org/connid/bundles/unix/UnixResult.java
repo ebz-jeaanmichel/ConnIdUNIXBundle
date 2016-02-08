@@ -86,6 +86,7 @@ public class UnixResult {
 							log.error(errorDescription);
 							throw new PermissionDeniedException(errorDescription);
 						}
+					case USERADD:
 					case PASSWD:
 					case USERMOD:
 						log.error(errorDescription);
@@ -93,6 +94,8 @@ public class UnixResult {
 					case GETENET:
 						log.error(errorDescription);
 						throw new ConfigurationException(errorDescription);
+					default : 
+						break;
 
 				}
 				break;
@@ -107,6 +110,8 @@ public class UnixResult {
 					case USERDEL:
 						log.error(errorDescription);
 						throw new UnknownUidException(errorDescription);
+					default:
+						break;
 				}
 				break;
 			case 8:
@@ -121,6 +126,7 @@ public class UnixResult {
 			case 10:
 			case 12:
 			case 14:
+			case 127:
 				log.error(errorDescription);
 				throw new ConnectorException(errorDescription);
 			default:

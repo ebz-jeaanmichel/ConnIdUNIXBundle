@@ -138,7 +138,7 @@ public class UnixCommon {
 		Attribute status = AttributeUtil.find(OperationalAttributes.LOCK_OUT_NAME, attrs);
 		if (status != null && status.getValue() != null && !status.getValue().isEmpty()) {
 			boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
-			UnixResult result;
+//			UnixResult result;
 			if (!statusValue) {
 				return UnixConnector.getCommandGenerator().lockUser(username);
 				// result.checkResult(Operation.USERMOD);
@@ -155,7 +155,7 @@ public class UnixCommon {
 		Attribute status = AttributeUtil.find(OperationalAttributes.ENABLE_NAME, attrs);
 		if (!isEmpty(status)) {
 			boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
-			UnixResult result;
+//			UnixResult result;
 			if (!statusValue) {
 				Attribute validTo = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, attrs);
 				String formatedDate = null;

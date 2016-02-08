@@ -15,26 +15,23 @@
  */
 package org.connid.bundles.unix.methods;
 
-import com.jcraft.jsch.JSchException;
-
 import java.io.IOException;
 import java.util.Set;
 
-import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
 import org.connid.bundles.unix.UnixResult.Operation;
-import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
-import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
-import org.identityconnectors.framework.common.exceptions.ConfigurationException;
-import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Uid;
+
+import com.jcraft.jsch.JSchException;
 
 public class UnixCreate {
 
@@ -57,15 +54,16 @@ public class UnixCreate {
 	}
 
 	public Uid create() {
-//		try {
+		try {
 			return doCreate();
-//		} catch (Exception e) {
-//			LOG.error(e, "error during creation");
-//			throw e;
-//		}
+		} catch (JSchException e) {
+			throw new ConnectorException(e.getMessage(), e);
+		} catch (IOException e) {
+			 throw new ConnectorException(e.getMessage(), e);
+		}
 	}
 
-	private Uid doCreate() {
+	private Uid doCreate() throws JSchException, IOException{
 
 		
 		if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
@@ -79,7 +77,6 @@ public class UnixCreate {
 		}
 
 		String objectName = name.getNameValue();
-		try {
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
 			StringBuilder commandToExecute = new StringBuilder();
 			String addCommand = UnixConnector.getCommandGenerator().createUser(objectName, attrs);
@@ -89,9 +86,7 @@ public class UnixCreate {
 			
 			UnixCommon.appendCreateOrUpdatePermissions(commandToExecute, objectName, attrs, true);
 			
-			UnixResult result;
-			
-				result = unixConnection.execute(commandToExecute.toString());
+			UnixResult result= unixConnection.execute(commandToExecute.toString());
 			
 			result.checkResult(Operation.USERADD, "Could not create user", LOG);
 
@@ -108,11 +103,7 @@ public class UnixCreate {
 			UnixResult result = unixConnection.execute(commandToExecute.toString());
 			result.checkResult(Operation.GROUPADD, "Could not create group", LOG);
 		}
-		} catch (JSchException e) {
-			throw new ConnectorException(e.getMessage(), e);
-		} catch (IOException e) {
-			 throw new ConnectorException(e.getMessage(), e);
-		}
+		
 
 		return new Uid(objectName);
 	}

@@ -18,7 +18,6 @@ package org.connid.bundles.unix.schema;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.objects.Name;
-import org.identityconnectors.framework.common.objects.Uid;
 
 public enum SchemaAccountAttribute {
 	
@@ -42,10 +41,10 @@ public enum SchemaAccountAttribute {
 	private String name;
 	private String command;
 	private boolean required;
-	private Class type;
+	private Class<?> type;
 	private Integer occurence;
 	
-	private SchemaAccountAttribute(String name, String command, boolean required, Class type, Integer occurence){
+	private SchemaAccountAttribute(String name, String command, boolean required, Class<?> type, Integer occurence){
 		this.name = name;
 		this.command = command;
 		this.required = required;
@@ -65,7 +64,7 @@ public enum SchemaAccountAttribute {
 		return required;
 	}
 	
-	public Class getType() {
+	public Class<?> getType() {
 		return type;
 	}
 	

@@ -17,7 +17,6 @@ package org.connid.bundles.unix.utilities;
 
 import java.util.List;
 
-import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.identityconnectors.common.security.GuardedString;
 
 public class Utilities {

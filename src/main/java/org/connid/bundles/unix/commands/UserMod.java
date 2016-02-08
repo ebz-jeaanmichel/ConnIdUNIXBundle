@@ -18,10 +18,7 @@ package org.connid.bundles.unix.commands;
 import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
-import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.commands.OptionBuilder.Operation;
-import org.connid.bundles.unix.schema.SchemaAccountAttribute;
-import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.objects.Attribute;
 
@@ -39,7 +36,7 @@ public class UserMod {
      * The name of the user will be changed from LOGIN to NEW_LOGIN. Nothing else is changed. In particular, the user's
      * home directory name should probably be changed manually to reflect the new login name.
      */
-    private static final String CHANGE_LOGIN_OPTION = "-l";
+//    private static final String CHANGE_LOGIN_OPTION = "-l";
 
     /**
      * Lock a user's password. This puts a '!' in front of the encrypted password, effectively disabling the password.
@@ -58,25 +55,25 @@ public class UserMod {
     /**
      * The new value of the user's password file comment field. It is normally modified using the chfn(1) utility.
      */
-    private static final String COMMENT_OPTION = "-c";
+//    private static final String COMMENT_OPTION = "-c";
 
     /**
      * The name of the user's new login shell. Setting this field to blank causes the system to select the default login
      * shell.
      */
-    private static final String SHELL_OPTION = "-s";
+//    private static final String SHELL_OPTION = "-s";
 
     /**
      * The user's new login directory. If the -m option is given, the contents of the current home directory will be
      * moved to the new home directory, which is created if it does not already exist.
      */
-    private static final String HOMEDIRECTORY_OPTION = "-d";
+//    private static final String HOMEDIRECTORY_OPTION = "-d";
 
     /**
      * Move the content of the user's home directory to the new location. This option is only valid in combination with
      * the -d (or --home) option.
      */
-    private static final String MOVE_FILE_OPTION = "-m";
+//    private static final String MOVE_FILE_OPTION = "-m";
 
     /**
      * The encrypted password, as returned by crypt(3).
@@ -89,7 +86,7 @@ public class UserMod {
      *
      * You should make sure the password respects the system's password policy.
      */
-    private static final String PASSWORD_OPTION = "-p";
+//    private static final String PASSWORD_OPTION = "-p";
     
     private String actualUsername = null;
     private Set<Attribute> attrs = null;

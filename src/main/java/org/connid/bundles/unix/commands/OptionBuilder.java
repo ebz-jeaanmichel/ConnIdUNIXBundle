@@ -19,7 +19,6 @@ package org.connid.bundles.unix.commands;
 import java.util.List;
 import java.util.Set;
 
-import org.connid.bundles.unix.UnixResult.Operation;
 import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.schema.SchemaGroupAttribute;
 import org.connid.bundles.unix.utilities.Utilities;

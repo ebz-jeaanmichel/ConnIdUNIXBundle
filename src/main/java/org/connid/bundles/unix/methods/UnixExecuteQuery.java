@@ -15,19 +15,19 @@
  */
 package org.connid.bundles.unix.methods;
 
-import com.jcraft.jsch.ChannelShell;
-import com.jcraft.jsch.JSchException;
-
 import java.io.IOException;
 
-import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.search.Operand;
 import org.connid.bundles.unix.search.Search;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
+
+import com.jcraft.jsch.ChannelShell;
+import com.jcraft.jsch.JSchException;
 
 public class UnixExecuteQuery {
 
@@ -35,7 +35,7 @@ public class UnixExecuteQuery {
 
     private UnixConnection connection = null;
 
-    private UnixConfiguration unixConfiguration = null;
+//    private UnixConfiguration unixConfiguration = null;
 
     private Operand filter = null;
 
@@ -56,10 +56,13 @@ public class UnixExecuteQuery {
     public final void executeQuery() {
         try {
             doExecuteQuery();
-        } catch (Exception e) {
-            LOG.error(e, "error during execute query operation");
-            throw new ConnectorException(e.getMessage(), e);
-        }
+        } catch (JSchException e) {
+			throw new ConnectorException(e.getMessage(), e);
+		} catch (IOException e) {
+			 throw new ConnectorException(e.getMessage(), e);
+		} catch (InterruptedException e){
+			throw new ConnectionBrokenException(e);
+		}
     }
 
     private void doExecuteQuery() throws IOException, InterruptedException, JSchException {

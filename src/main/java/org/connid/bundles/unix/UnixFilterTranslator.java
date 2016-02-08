@@ -89,14 +89,14 @@ public class UnixFilterTranslator extends AbstractFilterTranslator<Operand> {
         return new Operand(Operator.AND, leftExpression, rightExpression);
     }
 
-    private String checkSearchValue(String value) {
-        if (StringUtil.isEmpty(value)) {
-            return null;
-        }
-        if (value.contains("*") || value.contains("&") || value.contains("|")) {
-            throw new IllegalArgumentException(
-                    "Value of search attribute contains illegal character(s).");
-        }
-        return value;
-    }
+//    private String checkSearchValue(String value) {
+//        if (StringUtil.isEmpty(value)) {
+//            return null;
+//        }
+//        if (value.contains("*") || value.contains("&") || value.contains("|")) {
+//            throw new IllegalArgumentException(
+//                    "Value of search attribute contains illegal character(s).");
+//        }
+//        return value;
+//    }
 }

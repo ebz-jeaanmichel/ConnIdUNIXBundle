@@ -15,39 +15,31 @@
  */
 package org.connid.bundles.unix.methods;
 
-import com.jcraft.jsch.ChannelShell;
-import com.jcraft.jsch.JSchException;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
 import org.connid.bundles.unix.UnixResult.Operation;
 import org.connid.bundles.unix.commands.General;
-import org.connid.bundles.unix.commands.OptionBuilder;
-import org.connid.bundles.unix.files.PasswdFile;
 import org.connid.bundles.unix.files.PasswdRow;
 import org.connid.bundles.unix.schema.SchemaAccountAttribute;
-import org.connid.bundles.unix.search.Search;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
-import org.connid.bundles.unix.utilities.Utilities;
-import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.common.security.GuardedString;
-import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
-import org.identityconnectors.framework.common.exceptions.ConfigurationException;
-import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Uid;
+
+import com.jcraft.jsch.ChannelShell;
+import com.jcraft.jsch.JSchException;
 
 public class UnixUpdate {
 
@@ -72,18 +64,20 @@ public class UnixUpdate {
 	public Uid update() {
 		try {
 			return doUpdate(true);
-		} catch (Exception e) {
-			LOG.error(e, "error during update operation");
-			throw new ConnectorException("Error during update", e);
+		} catch (JSchException e) {
+			throw new ConnectorException(e.getMessage(), e);
+		} catch (IOException e) {
+			 throw new ConnectorException(e.getMessage(), e);
 		}
 	}
 
 	public Uid removeAttributes() {
 		try {
 			return doUpdate(false);
-		} catch (Exception e) {
-			LOG.error(e, "error during update operation");
-			throw new ConnectorException("Error during update", e);
+		} catch (JSchException e) {
+			throw new ConnectorException(e.getMessage(), e);
+		} catch (IOException e) {
+			 throw new ConnectorException(e.getMessage(), e);
 		}
 	}
 

@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.schema.SchemaGroupAttribute;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
 import org.identityconnectors.framework.common.objects.Uid;

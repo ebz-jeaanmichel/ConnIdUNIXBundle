@@ -26,16 +26,16 @@ public class General {
     }
 
     public static String searchUserIntoPasswdFile(final String username) {
-        return "getent passwd | grep --color=never ^" + username + ":";
+        return "getent passwd " + username;
     }
 
     public static String searchGroupIntoGroupFile(String groupname) {
-        return "getent group | grep --color=never ^" + groupname + ":";
+        return "getent group "+ groupname;
     }
 
     //shadow
     public static String searchUserStatusIntoShadowFile(final String username) {
-        return "getent shadow | grep --color=never ^" + username + ":";
+        return "getent shadow " + username;
     }
     
     public static String searchGroupsForUser(final String username) {

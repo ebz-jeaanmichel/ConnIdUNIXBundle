@@ -42,10 +42,13 @@ public class ReadOutputThread implements Callable<UnixResult> {
     @Override
     public UnixResult call() throws Exception {
 
-        String line, result;
+        String line;
+        LOG.ok("Channel closed: {0}", execChannel.isClosed());
         
-//        String line;
-
+        while (!execChannel.isClosed()){
+        	Thread.sleep(10);
+        }
+        
 		BufferedReader br = new BufferedReader(new InputStreamReader(fromServer));
 		StringBuilder buffer = new StringBuilder();
 		if (fromServer.available() > 0) {
@@ -54,22 +57,21 @@ public class ReadOutputThread implements Callable<UnixResult> {
 			}
 		}
 		if (execChannel.isClosed()) {
-			LOG.ok("exit-status: " + execChannel.getExitStatus());
+			LOG.ok("exit-status: {0}", execChannel.getExitStatus());
 		}
 
-		StringBuilder errorMessage = new StringBuilder();
-		if (errorStream.available() > 0) {
-			BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
-			String error;
-			while ((error = errorReader.readLine()) != null) {
-				errorMessage.append(error).append("\n");
-			}
-		}
+//		StringBuilder errorMessage = new StringBuilder();
+//		if (errorStream.available() > 0) {
+//			BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
+//			String error;
+//			while ((error = errorReader.readLine()) != null) {
+//				errorMessage.append(error).append("\n");
+//			}
+//		}
 
-//		sleep(1000);
-		LOG.ok("buffer " + buffer.toString());
+		LOG.ok("buffer {0}", buffer.toString());
 
-		return new UnixResult(execChannel.getExitStatus(), errorMessage.toString(), buffer.toString());
+		return new UnixResult(execChannel.getExitStatus(), buffer.toString(), buffer.toString());
         
      
     }

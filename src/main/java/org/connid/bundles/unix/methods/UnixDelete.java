@@ -15,24 +15,22 @@
  */
 package org.connid.bundles.unix.methods;
 
-import com.jcraft.jsch.JSchException;
-
 import java.io.IOException;
 
-import org.connid.bundles.unix.UnixConfiguration;
+import javax.naming.CommunicationException;
+
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
 import org.connid.bundles.unix.UnixResult.Operation;
-import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.exceptions.PermissionDeniedException;
-import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
+
+import com.jcraft.jsch.JSchException;
 
 public class UnixDelete {
 
@@ -54,9 +52,15 @@ public class UnixDelete {
 	public final void delete() {
 		try {
 			doDelete();
-		} catch (Exception e) {
+		} catch (JSchException e) {
 			LOG.error(e, "error during delete operation");
 			throw new ConnectorException(e);
+		} catch (InterruptedException e) {
+			LOG.error(e, "error during delete operation");
+			throw new ConnectionBrokenException(e);
+		} catch (IOException e) {
+			LOG.error(e, "error during delete operation");
+			throw new ConnectionBrokenException(e);
 		}
 	}
 

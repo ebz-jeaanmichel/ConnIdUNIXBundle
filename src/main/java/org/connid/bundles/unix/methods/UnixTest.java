@@ -15,12 +15,13 @@
  */
 package org.connid.bundles.unix.methods;
 
-import com.jcraft.jsch.JSchException;
 import java.io.IOException;
-import org.connid.bundles.unix.UnixConfiguration;
+
 import org.connid.bundles.unix.UnixConnection;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+
+import com.jcraft.jsch.JSchException;
 
 public class UnixTest {
 

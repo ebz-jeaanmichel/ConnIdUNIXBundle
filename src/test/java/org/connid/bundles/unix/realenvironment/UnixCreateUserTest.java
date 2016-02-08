@@ -28,17 +28,20 @@ import org.connid.bundles.unix.search.Operator;
 import org.connid.bundles.unix.utilities.AttributesTestValue;
 import org.connid.bundles.unix.utilities.SharedTestMethods;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.*;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.Name;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ResultsHandler;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class UnixCreateUserTest extends SharedTestMethods {
 
 	private UnixConnector connector = null;
-	
-	private UnixConnector connector2 = null;
 
 	private Name name = null;
 
@@ -49,10 +52,8 @@ public class UnixCreateUserTest extends SharedTestMethods {
 	@Before
 	public final void initTest() {
 		attrs = new AttributesTestValue();
-//		connector = new UnixConnector();
-		connector2 = new UnixConnector();
-//		connector.init(createConfiguration());
-		connector2.init(createConfiguration2());
+		connector = new UnixConnector();
+		connector.init(createConfiguration());
 		name = new Name(attrs.getUsername());
 	}
 
@@ -74,7 +75,6 @@ public class UnixCreateUserTest extends SharedTestMethods {
 	@Test
 	public final void createUserWithPubKey() {
 		printTestTitle("createUserWithPubKey");
-		boolean userExists = false;
 		Set<Attribute> attributes = createSetOfAttributes(name, attrs.getPassword(), true);
 		StringBuilder publicKey = new StringBuilder("ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIEAi6lZ+y6mjDg1VEl6IoJXfvsOuayj7i2WMOYjwlRWZdCOzqFw6W+KptBd+2WU+EBwtKFitYSWPc+LlihSGWEW+2XInujl8WKj1zdb/UewcvFXHVOAES32/9jvyfb935xPIKYM7OqzhUp6sHPDzauZ8V9aWek5/RZ81yPaRGmhwaE=");
 
@@ -95,29 +95,13 @@ public class UnixCreateUserTest extends SharedTestMethods {
 	@Test
 	public final void createUnLockedUser() {
 		printTestTitle("createUnLockedUser");
-//		newAccount = connector
-//				.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
-//		assertEquals(name.getNameValue(), newAccount.getUidValue());
-		final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
-		newAccount = connector2
+		newAccount = connector
 				.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
 		assertEquals(name.getNameValue(), newAccount.getUidValue());
+		final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
 		
 		System.out.println("first read");
-//		connector.executeQuery(ObjectClass.ACCOUNT,
-//				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
-//
-//					@Override
-//					public boolean handle(final ConnectorObject connObj) {
-//						actual.add(connObj);
-//						return true;
-//					}
-//				}, null);
-//		for (ConnectorObject connObj : actual) {
-//			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
-//		}
-		System.out.println("first read conn2");
-		connector2.executeQuery(ObjectClass.ACCOUNT,
+		connector.executeQuery(ObjectClass.ACCOUNT,
 				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
 
 					@Override
@@ -129,62 +113,7 @@ public class UnixCreateUserTest extends SharedTestMethods {
 		for (ConnectorObject connObj : actual) {
 			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
 		}
-//		sleep(10000);
-//		System.out.println("second read");
-//		connector.executeQuery(ObjectClass.ACCOUNT,
-//				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
-//
-//					@Override
-//					public boolean handle(final ConnectorObject connObj) {
-//						actual.add(connObj);
-//						return true;
-//					}
-//				}, null);
-//		for (ConnectorObject connObj : actual) {
-//			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
-//		}
-//		System.out.println("second read conn2");
-//		connector2.executeQuery(ObjectClass.ACCOUNT,
-//				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
-//
-//					@Override
-//					public boolean handle(final ConnectorObject connObj) {
-//						actual.add(connObj);
-//						return true;
-//					}
-//				}, null);
-//		for (ConnectorObject connObj : actual) {
-//			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
-//		}
-//		sleep(10000);
-//		System.out.println("third read");
-//		connector.executeQuery(ObjectClass.ACCOUNT,
-//				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
-//
-//					@Override
-//					public boolean handle(final ConnectorObject connObj) {
-//						actual.add(connObj);
-//						return true;
-//					}
-//				}, null);
-//		for (ConnectorObject connObj : actual) {
-//			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
-//		}
-//		System.out.println("third read conn2");
-//		connector2.executeQuery(ObjectClass.ACCOUNT,
-//				new Operand(Operator.EQ, Uid.NAME, newAccount.getUidValue(), false), new ResultsHandler() {
-//
-//					@Override
-//					public boolean handle(final ConnectorObject connObj) {
-//						actual.add(connObj);
-//						return true;
-//					}
-//				}, null);
-//		for (ConnectorObject connObj : actual) {
-//			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
-//		}
 		connector.authenticate(ObjectClass.ACCOUNT, newAccount.getUidValue(), attrs.getGuardedPassword(), null);
-		connector2.authenticate(ObjectClass.ACCOUNT, newAccount.getUidValue(), attrs.getGuardedPassword(), null);
 	}
 
 	private void sleep(final long timeout) {
@@ -228,8 +157,9 @@ public class UnixCreateUserTest extends SharedTestMethods {
 
 	@After
 	public final void close() {
+		sleep(3000);
 		if (newAccount != null) {
-			connector2.delete(ObjectClass.ACCOUNT, newAccount, null);
+			connector.delete(ObjectClass.ACCOUNT, newAccount, null);
 		}
 //		connector.dispose();
 	}

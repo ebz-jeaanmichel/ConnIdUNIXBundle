@@ -17,7 +17,6 @@
 package org.connid.bundles.unix.sshmanagement;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.Callable;
@@ -94,12 +93,10 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 		StringBuilder toReturn = new StringBuilder();
 		for (int i = 0; i < resultList.length - 1; i++) {
 			String afterTrim = resultList[i].trim();
-			if (afterTrim.contains("No such file or directory") || afterTrim.contains("Last login")) {
+			if (StringUtil.isBlank(afterTrim) || afterTrim.contains("No such file or directory") || afterTrim.contains("Last login")) {
 				continue;
 			}
 			
-			
-
 			if (normalize(afterTrim, toCompare, toReturn)) {
 				continue;
 			}
@@ -122,9 +119,11 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 	public UnixResult call() throws Exception {
 
 		BufferedReader br = new BufferedReader(new InputStreamReader(fromServer, "UTF-8"));
+		
 		String line;
 		boolean afterCommand = false;
 		boolean ready = br.ready();
+		
 		LOG.info("ready " + ready);
 		StringBuilder builder = new StringBuilder();
 		char c;
@@ -133,6 +132,7 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 			String s = Character.toString(c);
 			b.append(s);
 		}
+		LOG.ok("Before normalizing {0}", b.toString());
 		
 		String result = parseResult(b.toString());
 		LOG.ok("Result: {0}", result);
@@ -166,19 +166,19 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 
 	}
 
-	private boolean checkShell(BufferedReader br) throws IOException {
-		br.mark(0);
-		int shell = br.read();
-		String s = Character.toString((char) shell);
-		LOG.ok("Comparing shells : {0} <=> {1}", s, configuration.getShell());
-		if (s.equals(configuration.getShell())) {
-			LOG.ok("Shell matched. Stopping reading");
-			return false;
-		} else {
-			br.reset();
-		}
-
-		return true;
-	}
+//	private boolean checkShell(BufferedReader br) throws IOException {
+//		br.mark(0);
+//		int shell = br.read();
+//		String s = Character.toString((char) shell);
+//		LOG.ok("Comparing shells : {0} <=> {1}", s, configuration.getShell());
+//		if (s.equals(configuration.getShell())) {
+//			LOG.ok("Shell matched. Stopping reading");
+//			return false;
+//		} else {
+//			br.reset();
+//		}
+//
+//		return true;
+//	}
 
 }

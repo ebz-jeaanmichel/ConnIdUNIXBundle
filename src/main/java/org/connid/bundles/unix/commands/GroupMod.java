@@ -31,9 +31,9 @@ public class GroupMod {
      * The name of the group will be changed from GROUP to NEW_GROUP name.
      *
      */
-    private static final String NEW_NAME_OPTION = "-n";
+//    private static final String NEW_NAME_OPTION = "-n";
     private String groupName = "";
-    private String newGroupName = "";
+//    private String newGroupName = "";
     Set<Attribute> attrs = null;
 
     public GroupMod() {

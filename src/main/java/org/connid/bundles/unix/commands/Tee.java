@@ -16,11 +16,10 @@
 package org.connid.bundles.unix.commands;
 
 import org.connid.bundles.unix.UnixConfiguration;
-import org.identityconnectors.common.StringUtil;
 
 public class Tee {
 
-	 private UnixConfiguration unixConfiguration = null;
+//	 private UnixConfiguration unixConfiguration = null;
 
 	    /**
 	     * useradd - create a new user or update default new user information.
@@ -30,7 +29,7 @@ public class Tee {
 	    private String filename;
 
 	    public Tee(UnixConfiguration unixConfiguration, String filename) {
-			this.unixConfiguration = unixConfiguration;
+//			this.unixConfiguration = unixConfiguration;
 			this.filename = filename;
 		}
 	    

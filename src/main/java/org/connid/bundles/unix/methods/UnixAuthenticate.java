@@ -15,10 +15,9 @@
  */
 package org.connid.bundles.unix.methods;
 
-import com.jcraft.jsch.JSchException;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import org.connid.bundles.unix.UnixConfiguration;
+
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.logging.Log;
@@ -26,6 +25,8 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
+
+import com.jcraft.jsch.JSchException;
 
 public class UnixAuthenticate {
 
