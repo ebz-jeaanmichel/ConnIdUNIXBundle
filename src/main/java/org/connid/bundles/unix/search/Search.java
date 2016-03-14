@@ -58,36 +58,15 @@ public class Search {
 
 	private ResultsHandler handler = null;
 
-	private ChannelShell shellChannel;
 	
-//	public Search(final UnixConnection unixConnection,
-//			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
-//		this.unixConnection = unixConnection;
-//		this.handler = handler;
-//		this.objectClass = oc;
-//		this.filter = filter;
-//	
-//	}
-	
-	public Search(final ChannelShell shellChannel, final UnixConnection unixConnection,
+	public Search(final UnixConnection unixConnection,
 			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
-		this.shellChannel = shellChannel;
 		this.unixConnection = unixConnection;
 		this.handler = handler;
 		this.objectClass = oc;
 		this.filter = filter;
 	
 	}
-	
-//	public Search(final UnixConnection unixConnection,
-//			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
-////		this.shellChannel = shellChannel;
-//		this.unixConnection = unixConnection;
-//		this.handler = handler;
-//		this.objectClass = oc;
-//		this.filter = filter;
-//	
-//	}
 	
 	public void searchAll() throws JSchException, IOException, InterruptedException{
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
@@ -117,8 +96,8 @@ public class Search {
 		// unixConnection.openExecChannel();
 //		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().userExists(
 //				filter.getAttributeValue()));
-		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().userExists(
-				filter.getAttributeValue()), shellChannel);
+		UnixResult result = unixConnection.executeRead(UnixConnector.getCommandGenerator().userExists(
+				filter.getAttributeValue()));
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		PasswdFile passwdFile = new PasswdFile(getFileOutput(result.getOutput()));
 		return passwdFile;
@@ -126,7 +105,7 @@ public class Search {
 
 	private PasswdFile searchAllUsers() throws JSchException, IOException {
 //		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllUser());
-		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllUser(), shellChannel);
+		UnixResult result = unixConnection.executeRead(UnixConnector.getCommandGenerator().searchAllUser());
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		PasswdFile passwdFile = new PasswdFile(getFileOutput(result.getOutput()));
 		return passwdFile;
@@ -134,7 +113,7 @@ public class Search {
 
 	private GroupFile searchAllGroups() throws JSchException, IOException {
 //		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllGroups());
-		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllGroups(), shellChannel);
+		UnixResult result = unixConnection.executeRead(UnixConnector.getCommandGenerator().searchAllGroups());
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		GroupFile passwdFile = new GroupFile(getFileOutput(result.getOutput()));
 		return passwdFile;
@@ -143,8 +122,8 @@ public class Search {
 	private GroupFile searchGroupByUid() throws JSchException, IOException {
 //		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().groupExists(
 //				filter.getAttributeValue()));
-		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().groupExists(
-				filter.getAttributeValue()), shellChannel);
+		UnixResult result = unixConnection.executeRead(UnixConnector.getCommandGenerator().groupExists(
+				filter.getAttributeValue()));
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		GroupFile passwdFile = new GroupFile(getFileOutput(result.getOutput()));
 		return passwdFile;
@@ -235,14 +214,14 @@ public class Search {
 //										.getOutput())));
 				bld.addAttribute(AttributeBuilder.build(SchemaAccountAttribute.GROUPS.getName(),
 						EvaluateCommandsResultOutput
-								.evaluateUserGroups(unixConnection.executeShell(
-										UnixConnector.getCommandGenerator().userGroups(passwdRow.getUsername()), shellChannel)
+								.evaluateUserGroups(unixConnection.executeRead(
+										UnixConnector.getCommandGenerator().userGroups(passwdRow.getUsername()))
 										.getOutput())));
 			
 //				String shadowInfo = unixConnection.executeShell(
 //						UnixConnector.getCommandGenerator().userStatus(filter.getAttributeValue())).getOutput();
-				String shadowInfo = unixConnection.executeShell(
-						UnixConnector.getCommandGenerator().userStatus(passwdRow.getUsername()), shellChannel).getOutput();
+				String shadowInfo = unixConnection.executeRead(
+						UnixConnector.getCommandGenerator().userStatus(passwdRow.getUsername())).getOutput();
 				if (StringUtil.isNotBlank(shadowInfo)) {
 					String[] shadowAttrs = shadowInfo.split(":", 9);
 					bld.addAttribute(OperationalAttributes.LOCK_OUT_NAME,
@@ -262,7 +241,7 @@ public class Search {
 					}
 				}
 				
-				String userPermissions = unixConnection.executeShell(UnixConnector.getCommandGenerator().userPermissions(passwdRow.getUsername()), shellChannel).getOutput();
+				String userPermissions = unixConnection.executeRead(UnixConnector.getCommandGenerator().userPermissions(passwdRow.getUsername())).getOutput();
 				if (StringUtil.isNotBlank(userPermissions)) {
 					String evaluated = EvaluateCommandsResultOutput.evaluatePermissions(passwdRow.getUsername(), userPermissions);
 					LOG.ok("Evaluated permissions: {0}", evaluated);
@@ -299,7 +278,7 @@ public class Search {
 			bld.addAttribute(AttributeBuilder.build(SchemaGroupAttribute.GID.getName(),
 					CollectionUtil.newSet(groupRow.getGroupIdentifier())));
 
-			String userPermissions = unixConnection.executeShell(UnixConnector.getCommandGenerator().groupPermissions(groupRow.getGroupname()), shellChannel).getOutput();
+			String userPermissions = unixConnection.executeRead(UnixConnector.getCommandGenerator().groupPermissions(groupRow.getGroupname())).getOutput();
 			if (StringUtil.isNotBlank(userPermissions)) {
 				String evaluated = EvaluateCommandsResultOutput.evaluatePermissions("%"+groupRow.getGroupname(), userPermissions);
 				LOG.ok("Evaluated permissions: {0}", evaluated);

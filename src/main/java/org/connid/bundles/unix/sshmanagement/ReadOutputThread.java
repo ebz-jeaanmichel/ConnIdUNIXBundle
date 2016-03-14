@@ -49,7 +49,7 @@ public class ReadOutputThread implements Callable<UnixResult> {
 		LOG.ok("Channel closed: {0}", execChannel.isClosed());
 
 		while (!execChannel.isClosed()) {
-			Thread.sleep(100);
+			Thread.sleep(10);
 			LOG.ok("Sleeping, channel not closed");
 		}
 

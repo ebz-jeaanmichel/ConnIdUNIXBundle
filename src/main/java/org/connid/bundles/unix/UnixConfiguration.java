@@ -37,8 +37,6 @@ public class UnixConfiguration extends AbstractConfiguration {
 
     private boolean deleteHomeDirectory = false;
 
-//    private String baseHomeDirectory = "";
-
     private String shell = "";
 
     private boolean root = false;
@@ -49,15 +47,10 @@ public class UnixConfiguration extends AbstractConfiguration {
 
     private GuardedString sudoPassword = null;
 
-    private long readTimeout = 1000000;
+    private long readTimeout = 10000;
     
-    private long timeToWait = 10;
+    private long timeToWait = 100;
     
-//    private String commentAttribute = "";
-
-//    private String shellAttribute = "";
-
-//    private String homeDirectoryAttribute = "";
 
     
     private int sshConnectionTimeout = 5000; 

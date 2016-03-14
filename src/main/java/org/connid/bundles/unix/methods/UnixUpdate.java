@@ -67,7 +67,7 @@ public class UnixUpdate {
 		} catch (JSchException e) {
 			throw new ConnectorException(e.getMessage(), e);
 		} catch (IOException e) {
-			 throw new ConnectorException(e.getMessage(), e);
+			throw new ConnectorException(e.getMessage(), e);
 		}
 	}
 
@@ -77,7 +77,7 @@ public class UnixUpdate {
 		} catch (JSchException e) {
 			throw new ConnectorException(e.getMessage(), e);
 		} catch (IOException e) {
-			 throw new ConnectorException(e.getMessage(), e);
+			throw new ConnectorException(e.getMessage(), e);
 		}
 	}
 
@@ -101,15 +101,12 @@ public class UnixUpdate {
 		} else {
 			newUserNameValue = uid.getUidValue();
 		}
-		
-		
 
 		if (objectClass.equals(ObjectClass.ACCOUNT)) {
-			ChannelShell shellChannel = unixConnection.createShellChannel();
 			StringBuilder commandBuilder = new StringBuilder();
-//			ChannelShell shellChannel = unixConnection.createShellChannel();
+			// ChannelShell shellChannel = unixConnection.createShellChannel();
 			if (!isAdd) {
-				processGroupMembership(commandBuilder, newUserNameValue, shellChannel);
+				processGroupMembership(commandBuilder, newUserNameValue);
 			}
 
 			String modCommand = UnixConnector.getCommandGenerator().updateUser(uid.getUidValue(), attrs, isAdd);
@@ -121,8 +118,8 @@ public class UnixUpdate {
 					UnixCommon.buildLockoutCommand(unixConnection, newUserNameValue, attrs));
 
 			if (newUserName != null) {
-				String oldUser = unixConnection.executeShell(
-						UnixConnector.getCommandGenerator().userExists(uid.getUidValue()), shellChannel).getOutput();
+				String oldUser = unixConnection
+						.executeRead(UnixConnector.getCommandGenerator().userExists(uid.getUidValue())).getOutput();
 				if (StringUtil.isBlank(oldUser)) {
 					throw new UnknownUidException("User do not exists");
 				}
@@ -133,7 +130,6 @@ public class UnixUpdate {
 						newUserNameValue);
 				UnixCommon.appendCommand(commandBuilder, groupRename);
 			}
-//			UnixConnection.disconnectShellChannel(shellChannel);
 
 			if (isAdd) {
 				UnixCommon.appendCreateOrUpdatePublicKeyCommand(commandBuilder, newUserNameValue, attrs, false);
@@ -145,8 +141,6 @@ public class UnixUpdate {
 					UnixCommon.appendRemovePermissions(commandBuilder, newUserNameValue, true);
 				}
 			}
-			
-			unixConnection.disconnectShellChannel(shellChannel);
 
 			if (StringUtil.isNotBlank(commandBuilder.toString())) {
 				UnixResult result = unixConnection.execute(commandBuilder.toString());
@@ -168,14 +162,15 @@ public class UnixUpdate {
 		}
 		return new Uid(newUserNameValue);
 	}
-	
-	private void processGroupMembership(StringBuilder commandBuilder, String newUserNameValue, ChannelShell shellChannel) throws JSchException, IOException{
+
+	private void processGroupMembership(StringBuilder commandBuilder, String newUserNameValue)
+			throws JSchException, IOException {
 		Attribute attr = AttributeUtil.find(SchemaAccountAttribute.GROUPS.getName(), attrs);
 		if (!UnixCommon.isEmpty(attr)) {
-			
-			List<String> groups = EvaluateCommandsResultOutput.evaluateUserGroups(unixConnection.executeShell(
-					General.searchGroupsForUser(newUserNameValue), shellChannel).getOutput());
-			
+
+			List<String> groups = EvaluateCommandsResultOutput.evaluateUserGroups(
+					unixConnection.executeRead(General.searchGroupsForUser(newUserNameValue)).getOutput());
+
 			List<Object> newGroups = new ArrayList<Object>();
 			for (String group : groups) {
 				if (attr.getValue().contains(group)) {
@@ -184,8 +179,8 @@ public class UnixUpdate {
 				newGroups.add(group);
 			}
 
-			UnixCommon.appendCommand(commandBuilder, UnixConnector.getCommandGenerator()
-					.buildRemoveFromGroupsCommand(newUserNameValue, newGroups));
+			UnixCommon.appendCommand(commandBuilder,
+					UnixConnector.getCommandGenerator().buildRemoveFromGroupsCommand(newUserNameValue, newGroups));
 		}
 
 	}

@@ -31,85 +31,68 @@ import com.jcraft.jsch.JSchException;
 
 public class UnixExecuteQuery {
 
-    private static final Log LOG = Log.getLog(UnixExecuteQuery.class);
+	private static final Log LOG = Log.getLog(UnixExecuteQuery.class);
 
-    private UnixConnection connection = null;
+	private UnixConnection connection = null;
 
-//    private UnixConfiguration unixConfiguration = null;
+	private Operand filter = null;
 
-    private Operand filter = null;
+	private ResultsHandler handler = null;
 
-    private ResultsHandler handler = null;
+	private ObjectClass objectClass = null;
 
-    private ObjectClass objectClass = null;
+	public UnixExecuteQuery(final UnixConnection connection, final ObjectClass oc, final Operand filter,
+			final ResultsHandler rh) throws IOException, JSchException {
+		this.connection = connection;
+		this.filter = filter;
+		this.handler = rh;
+		this.objectClass = oc;
+	}
 
-    public UnixExecuteQuery(final UnixConnection connection,
-            final ObjectClass oc, final Operand filter,
-            final ResultsHandler rh) throws IOException, JSchException {
-        this.connection = connection;
-//        unixConfiguration = configuration;
-        this.filter = filter;
-        handler = rh;
-        objectClass = oc;
-    }
-
-    public final void executeQuery() {
-        try {
-            doExecuteQuery();
-        } catch (JSchException e) {
+	public final void executeQuery() {
+		try {
+			doExecuteQuery();
+		} catch (JSchException e) {
 			throw new ConnectorException(e.getMessage(), e);
 		} catch (IOException e) {
-			 throw new ConnectorException(e.getMessage(), e);
-		} catch (InterruptedException e){
+			throw new ConnectorException(e.getMessage(), e);
+		} catch (InterruptedException e) {
 			throw new ConnectionBrokenException(e);
 		}
-    }
+	}
 
-    private void doExecuteQuery() throws IOException, InterruptedException, JSchException {
+	private void doExecuteQuery() throws IOException, InterruptedException, JSchException {
 
-        if (!objectClass.equals(ObjectClass.ACCOUNT)
-                && (!objectClass.equals(ObjectClass.GROUP))) {
-            throw new IllegalStateException("Wrong object class");
-        }
+		if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
+			throw new IllegalStateException("Wrong object class");
+		}
 
-        	
-        ChannelShell shellChannel = null;
-        try{
-//        	shellChannel = connection.createShellChannel();
-        	if (filter == null){
-        		new Search(shellChannel, connection, handler, objectClass, null).searchAll();
-        	}
-        switch (filter.getOperator()) {
-            case EQ:
-                new Search(shellChannel, connection, handler, objectClass, filter).equalSearch();
-                break;
-            case SW:
-                new Search(shellChannel, connection, handler,
-                        objectClass, filter).startsWithSearch();
-                break;
-            case EW:
-                new Search(shellChannel, connection, handler,
-                        objectClass, filter).endsWithSearch();
-                break;
-            case C:
-                new Search(shellChannel, connection, handler,
-                        objectClass, filter).containsSearch();
-                break;
-            case OR:
-                new Search(shellChannel, connection, handler,
-                        objectClass, filter.getFirstOperand()).orSearch();
-                break;
-            case AND:
-                new Search(shellChannel, connection, handler,
-                        objectClass, filter).andSearch();
-                break;
-            default:
-//            	connection.disconnectShellChannel(shellChannel);
-                throw new ConnectorException("Wrong Operator");
-        }
-        } finally {
-//        	connection.disconnectShellChannel(shellChannel);
-        }
-        
-    }
+		if (filter == null) {
+			new Search(connection, handler, objectClass, null).searchAll();
+			return;
+		}
+		switch (filter.getOperator()) {
+		case EQ:
+			new Search(connection, handler, objectClass, filter).equalSearch();
+			break;
+		case SW:
+			new Search(connection, handler, objectClass, filter).startsWithSearch();
+			break;
+		case EW:
+			new Search(connection, handler, objectClass, filter).endsWithSearch();
+			break;
+		case C:
+			new Search(connection, handler, objectClass, filter).containsSearch();
+			break;
+		case OR:
+			new Search(connection, handler, objectClass, filter.getFirstOperand()).orSearch();
+			break;
+		case AND:
+			new Search(connection, handler, objectClass, filter).andSearch();
+			break;
+		default:
+			throw new ConnectorException("Wrong Operator");
+		}
+
+	}
 }
