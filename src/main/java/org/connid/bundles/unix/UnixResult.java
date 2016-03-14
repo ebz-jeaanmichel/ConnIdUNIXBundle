@@ -53,7 +53,7 @@ public class UnixResult {
 	}
 
 	public void checkResult(Operation operation, String message, Log log) {
-		if (getExitStatus() == 0 || (Operation.GETENET == operation && getExitStatus() == -1)) {
+		if (getExitStatus() == 0) {
 			return;
 		}
 		String errorDescription = message + ": " + getErrorMessage();

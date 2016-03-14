@@ -26,6 +26,7 @@ import org.connid.bundles.unix.UnixResult;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 
+import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelShell;
 
 public class ReadShellOutputThread implements Callable<UnixResult> {
@@ -36,17 +37,17 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 	private InputStream fromServer;
 	private String command;
 	private UnixConfiguration configuration;
-	private ChannelShell shellChannel;
+	private ChannelExec execChannel;
 
 	// InputStream fromServer, InputStream errorStream,
-	public ReadShellOutputThread(ChannelShell shellChannel, InputStream fromServer, InputStream errorStream,
+	public ReadShellOutputThread(ChannelExec shellChannel, InputStream fromServer, InputStream errorStream,
 			String command, UnixConfiguration configuration) {
 		// this.fromServer = br;
 		this.errorStream = errorStream;
 		this.fromServer = fromServer;
 		this.command = command;
 		this.configuration = configuration;
-		this.shellChannel = shellChannel;
+		this.execChannel = shellChannel;
 	}
 
 	private boolean normalize(String toCheck, String pattern, StringBuilder toCompare, StringBuilder toReturn) {
@@ -88,12 +89,13 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 	}
 	
 	private String parseResult(String toParse){
-		String[] resultList = toParse.split("\r\n");
+		String[] resultList = toParse.split("\n");
 		StringBuilder toCompare = new StringBuilder();
 		StringBuilder toReturn = new StringBuilder();
-		for (int i = 0; i < resultList.length - 1; i++) {
+		for (int i = 0; i < resultList.length; i++) {
 			String afterTrim = resultList[i].trim();
-			if (StringUtil.isBlank(afterTrim) || afterTrim.contains("No such file or directory") || afterTrim.contains("Last login")) {
+			
+			if (StringUtil.isBlank(afterTrim) || afterTrim.contains("No such file or directory") || afterTrim.contains("Last login")){
 				continue;
 			}
 			
@@ -118,51 +120,109 @@ public class ReadShellOutputThread implements Callable<UnixResult> {
 	@Override
 	public UnixResult call() throws Exception {
 
-		BufferedReader br = new BufferedReader(new InputStreamReader(fromServer, "UTF-8"));
-		
-		String line;
-		boolean afterCommand = false;
-		boolean ready = br.ready();
-		
-		LOG.info("ready " + ready);
-		StringBuilder builder = new StringBuilder();
-		char c;
-		StringBuilder b = new StringBuilder();
-		while ((c = (char) br.read()) != -1 && br.ready()) {
-			String s = Character.toString(c);
-			b.append(s);
-		}
-		LOG.ok("Before normalizing {0}", b.toString());
-		
-		String result = parseResult(b.toString());
-		LOG.ok("Result: {0}", result);
-
-		BufferedReader errorBr = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
-		ready = errorBr.ready();
-		LOG.info("error ready " + ready);
-		StringBuilder errorBuilder = new StringBuilder();
-		while (ready) {
-			line = errorBr.readLine();
-			LOG.ok("Read line: {0}", line);
-			if (line.contains(command)) {
-				afterCommand = true;
-				continue;
-			}
-			if (afterCommand) {
-
-				if (line.contains(configuration.getAdmin() + "@")) {
-					ready = false;
-				} else {
-					builder.append(line).append("\n");
+		 String line;
+	        LOG.ok("Channel closed: {0}", execChannel.isClosed());
+	        
+	        while (!execChannel.isClosed()){
+	        	Thread.sleep(10);
+	        	LOG.ok("Sleeping, channel not closed");
+	        }
+	        
+	        LOG.ok("Channel closed: {0}", execChannel.isClosed());
+	        
+			BufferedReader br = new BufferedReader(new InputStreamReader(fromServer));
+			StringBuilder buffer = new StringBuilder();
+			LOG.ok("Input stream, available {0}", fromServer.available());
+			
+			LOG.ok("Input stream, ready {0}", br.ready());
+			
+			LOG.ok("Input stream, available {0}", fromServer.available());
+			if (fromServer.available() > 0 && br.ready()) {
+				while ((line = br.readLine()) != null) {
+					LOG.ok("Reading line: {0}", line);
+					buffer.append(line).append("\n");
 				}
 			}
+			if (execChannel.isClosed()) {
+				LOG.ok("exit-status: {0}", execChannel.getExitStatus());
+			}
 
-		}
-		LOG.ok("Error: " + errorBuilder);
+//			StringBuilder errorMessage = new StringBuilder();
+//			if (errorStream.available() > 0) {
+//				BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
+//				String error;
+//				while ((error = errorReader.readLine()) != null) {
+//					errorMessage.append(error).append("\n");
+//				}
+//			}
 
-		LOG.ok("Exit status: {0}", shellChannel.getExitStatus());
+			LOG.ok("buffer {0}", buffer.toString());
+			
+			LOG.ok("Before normalizing {0}", buffer.toString());
+			
+			String result = parseResult(buffer.toString());
+			LOG.ok("Result: {0}", result);
 
-		return new UnixResult(shellChannel.getExitStatus(), errorBuilder.toString(), result);
+			return new UnixResult(0, buffer.toString(), result);
+		
+//		BufferedReader br = new BufferedReader(new InputStreamReader(fromServer, "UTF-8"));
+//		
+//		String line;
+//		boolean afterCommand = false;
+//		boolean ready = br.ready();
+//		
+//		LOG.info("ready " + ready);
+//		LOG.info("available {0}", fromServer.available());
+//		while (fromServer.available() < 1){
+//			LOG.ok("Sleep for 10");
+//			Thread.sleep(10);
+//		}
+//		
+//		LOG.info(" shell is EOF: {0}", shellChannel.isEOF());
+//		LOG.info(" shell is closed: {0}", shellChannel.isClosed());
+//		
+//		StringBuilder builder = new StringBuilder();
+//		char c;
+//		StringBuilder b = new StringBuilder();
+//		while ((c = (char) br.read()) != -1 && br.ready()) { //
+//			String s = Character.toString(c);
+//			b.append(s);
+//		}
+//		LOG.info(" shell is EOF: {0}", shellChannel.isEOF());
+//		LOG.info(" shell is closed: {0}", shellChannel.isClosed());
+//		LOG.info("available after {0}", fromServer.available());
+//		LOG.ok("Before normalizing {0}", b.toString());
+//		
+//		String result = parseResult(b.toString());
+//		LOG.ok("Result: {0}", result);
+//
+//		BufferedReader errorBr = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
+//		ready = errorBr.ready();
+//		LOG.info("error ready " + ready);
+//		StringBuilder errorBuilder = new StringBuilder();
+//		while (ready) {
+//			line = errorBr.readLine();
+//			LOG.ok("Read line: {0}", line);
+//			if (line.contains(command)) {
+//				afterCommand = true;
+//				continue;
+//			}
+//			if (afterCommand) {
+//
+//				if (line.contains(configuration.getAdmin() + "@")) {
+//					ready = false;
+//				} else {
+//					builder.append(line).append("\n");
+//				}
+//			}
+//
+//		}
+//		LOG.ok("Error: " + errorBuilder);
+//
+//		LOG.ok("Exit status: {0}", shellChannel.getExitStatus());
+//		LOG.info(" shell is EOF: {0}", shellChannel.isEOF());
+//		LOG.info(" shell is closed: {0}", shellChannel.isClosed());
+//		return new UnixResult(shellChannel.getExitStatus(), errorBuilder.toString(), result);
 
 	}
 

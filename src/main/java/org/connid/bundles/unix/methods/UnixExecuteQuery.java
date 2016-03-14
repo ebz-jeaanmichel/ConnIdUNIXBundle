@@ -75,7 +75,7 @@ public class UnixExecuteQuery {
         	
         ChannelShell shellChannel = null;
         try{
-        	shellChannel = connection.createShellChannel();
+//        	shellChannel = connection.createShellChannel();
         	if (filter == null){
         		new Search(shellChannel, connection, handler, objectClass, null).searchAll();
         	}
@@ -104,11 +104,11 @@ public class UnixExecuteQuery {
                         objectClass, filter).andSearch();
                 break;
             default:
-            	connection.disconnectShellChannel(shellChannel);
+//            	connection.disconnectShellChannel(shellChannel);
                 throw new ConnectorException("Wrong Operator");
         }
         } finally {
-        	connection.disconnectShellChannel(shellChannel);
+//        	connection.disconnectShellChannel(shellChannel);
         }
         
     }

@@ -157,7 +157,7 @@ public class UnixCreateUserTest extends SharedTestMethods {
 
 	@After
 	public final void close() {
-		sleep(3000);
+		sleep(5000);
 		if (newAccount != null) {
 			connector.delete(ObjectClass.ACCOUNT, newAccount, null);
 		}

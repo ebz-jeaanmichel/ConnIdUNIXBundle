@@ -17,7 +17,9 @@ package org.connid.bundles.unix;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -28,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.connid.bundles.unix.sshmanagement.ReadOutputThread;
 import org.connid.bundles.unix.sshmanagement.ReadShellOutputThread;
+import org.connid.bundles.unix.sshmanagement.ReadShellOutputThread2;
 import org.connid.bundles.unix.utilities.Constants;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
@@ -123,7 +126,7 @@ public class UnixConnection {
 		execChannel.setCommand(command);
 		execChannel.connect(unixConfiguration.getSshConnectionTimeout());
 		LOG.ok("Reading output");
-		return readOutput(new ReadOutputThread(fromServer, errorStream, execChannel));
+		return readOutput(new ReadOutputThread(fromServer, errorStream, execChannel, false));
 	}
 
 //	private OutputStream toServerShell;
@@ -158,25 +161,47 @@ public class UnixConnection {
 	
 
 public UnixResult executeShell(String command, ChannelShell shellChannel) throws JSchException, IOException {
-		
-		LOG.info("Executing shellChannel => closed: {0}, connected: {1}, EOF: {2}" ,  shellChannel.isClosed(), shellChannel.isConnected(), shellChannel.isEOF());
-		
-		OutputStream toServerShell = shellChannel.getOutputStream();
-		
-		InputStream outputstream_from_the_channel = shellChannel.getInputStream();
-		InputStream errorstream_from_the_channel = shellChannel.getExtInputStream();
-		
-		LOG.ok("Command to execute: {0}", command);
-		toServerShell.write((command + "\r\n").getBytes());
-		toServerShell.flush();
+	
+	Session session = getInitializedSession();
 
-		sleep(unixConfiguration.getTimeToWait());
-
-		UnixResult result = readOutput(new ReadShellOutputThread(shellChannel, outputstream_from_the_channel, errorstream_from_the_channel, command, unixConfiguration));
-		
+	LOG.ok("Executing on: {0}", session.getHost());
+	
+	ChannelExec execChannel = createExecChannel(session, command);
+	LOG.ok("Command to execute: " + command);
+	execChannel.setCommand(command);
+	execChannel.connect(unixConfiguration.getSshConnectionTimeout());
+	LOG.ok("Reading output");
+	UnixResult result = readOutput(new ReadOutputThread(fromServer, errorStream, execChannel, true));
+		execChannel.disconnect();
 		return result;
+//		LOG.info("Executing shellChannel => closed: {0}, connected: {1}, EOF: {2}" ,  shellChannel.isClosed(), shellChannel.isConnected(), shellChannel.isEOF());
+//		
+//		OutputStream toServerShell = shellChannel.getOutputStream();
+//		
+//		InputStream outputstream_from_the_channel = shellChannel.getInputStream();
+//		InputStream errorstream_from_the_channel = shellChannel.getExtInputStream();
+//		
+//		LOG.ok("Command to execute: {0}", command);
+//		toServerShell.write((command + "\r\n").getBytes());
+//		toServerShell.flush();
+//
+////		sleep(unixConfiguration.getTimeToWait());
+////
+////		LOG.info("available {0}", outputstream_from_the_channel.available());
+////		while (outputstream_from_the_channel.available() < (command.length() + 1)){
+////			sleep(10);
+////			LOG.info("sleeping, available {0}", outputstream_from_the_channel.available());
+////			
+////		}
+//		LOG.info("available {0}", outputstream_from_the_channel.available());
+//		
+//		UnixResult result = readOutput(new ReadShellOutputThread2(shellChannel, outputstream_from_the_channel, errorstream_from_the_channel, command, unixConfiguration));
+//		
+//		return result;
 	
 	}
+
+
 
 
 	public UnixResult execute(final String command, final String password) throws JSchException, IOException {
@@ -192,18 +217,41 @@ public UnixResult executeShell(String command, ChannelShell shellChannel) throws
 		LOG.ok("Command to execute: " + command);
 		execChannel.setCommand(command);
 		execChannel.setPty(unixConfiguration.isUsePty());
-		execChannel.connect();
+		execChannel.connect(5000);
 		sleep(unixConfiguration.getTimeToWait());
+//		sleep(100);
+//		InputStreamReader reader = new InputStreamReader(execChannel.getInputStream());
+//		while (!reader.ready()){
+//			sleep(10);
+//		}
+		
 		OutputStream out = execChannel.getOutputStream();
+//	execChannel.getInputStream().available()
 		if (StringUtil.isNotBlank(password)) {
 			out.write((password + "\n").getBytes());
 			out.flush();
+//			OutputStreamWriter writer = new OutputStreamWriter(out);
+//			execChannel.
+//			reader = new InputStreamReader(execChannel.getInputStream());
+//			LOG.ok(" reader {0}", reader.ready());
+//			while (!reader.ready()){
+//				sleep(10);
+//			}
+//			LOG.ok("ready 1 {0} ", reader.ready());
 			sleep(unixConfiguration.getTimeToWait());
+//			sleep(100);
 			out.write((password + "\n").getBytes());
 			out.flush();
+//			reader = new InputStreamReader(execChannel.getInputStream());
+//			LOG.ok(" reader {0}", reader.ready());
+//			while (!reader.ready()){
+//				sleep(10);
+//			}
+//			LOG.ok("ready 2 {0} ", reader.ready());
 			sleep(unixConfiguration.getTimeToWait());
+//			sleep(100);
 		}
-		return readOutput(new ReadOutputThread(fromServer, errorStream, execChannel));
+		return readOutput(new ReadOutputThread(fromServer, errorStream, execChannel, false));
 	}
 
 	private UnixResult readOutput(Callable<UnixResult> readThread) throws IOException {

@@ -18,6 +18,7 @@ package org.connid.bundles.unix.utilities;
 import java.util.Set;
 
 import org.connid.bundles.unix.UnixConfiguration;
+import org.connid.bundles.unix.utilities.*;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -48,8 +49,8 @@ public class SharedTestMethods {
         config.setPtyType(UnixProperties.UNIX_PTY_TYPE);
         config.setSudoPassword(new GuardedString(UnixProperties.UNIX_PASSWORD.toCharArray()));
         config.setSshConnectionTimeout(5000);
-        config.setReadTimeout(50000);
-        config.setTimeToWait(100);
+        config.setReadTimeout(30000);
+        config.setTimeToWait(1000);
         config.setShell("$");
 //        config.setCommentAttribute("comment");
 //        config.setShellAttribute("shell");

@@ -37,6 +37,7 @@ import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
@@ -273,7 +274,9 @@ public class Search {
 				}
 
 //			}
-			handler.handle(bld.build());
+				ConnectorObject object = bld.build();
+				LOG.ok("Returning object: {0}", object);
+			handler.handle(object);
 		}
 		
 	}

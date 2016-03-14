@@ -23,36 +23,49 @@ import java.util.concurrent.Callable;
 
 import org.connid.bundles.unix.UnixResult;
 import org.identityconnectors.common.logging.Log;
+import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
 
 import com.jcraft.jsch.ChannelExec;
 
 public class ReadOutputThread implements Callable<UnixResult> {
 
-    private static final Log LOG = Log.getLog(ReadOutputThread.class);
-    private InputStream fromServer;
-    private InputStream errorStream;
-    private ChannelExec execChannel;
+	private static final Log LOG = Log.getLog(ReadOutputThread.class);
+	private InputStream fromServer;
+	private InputStream errorStream;
+	private ChannelExec execChannel;
+	private boolean isRead;
 
-    public ReadOutputThread(InputStream fromServer, InputStream errorStream, ChannelExec execChannel) {
-        this.fromServer = fromServer;
-        this.errorStream = errorStream;
-        this.execChannel = execChannel;
-    }
+	public ReadOutputThread(InputStream fromServer, InputStream errorStream, ChannelExec execChannel, boolean isRead) {
+		this.fromServer = fromServer;
+		this.errorStream = errorStream;
+		this.execChannel = execChannel;
+		this.isRead = isRead;
+	}
 
-    @Override
-    public UnixResult call() throws Exception {
+	@Override
+	public UnixResult call() throws Exception {
 
-        String line;
-        LOG.ok("Channel closed: {0}", execChannel.isClosed());
-        
-        while (!execChannel.isClosed()){
-        	Thread.sleep(10);
-        }
-        
+		String line;
+		LOG.ok("Channel closed: {0}", execChannel.isClosed());
+
+		while (!execChannel.isClosed()) {
+			Thread.sleep(100);
+			LOG.ok("Sleeping, channel not closed");
+		}
+
+		LOG.ok("Channel closed: {0}", execChannel.isClosed());
+
 		BufferedReader br = new BufferedReader(new InputStreamReader(fromServer));
 		StringBuilder buffer = new StringBuilder();
+		LOG.ok("Input stream, available {0}", fromServer.available());
 		if (fromServer.available() > 0) {
 			while ((line = br.readLine()) != null) {
+				if (isRead) {
+					if (line.contains("Could not chdir to home directory")) {
+						continue;
+					}
+				}
+				LOG.ok("Reading line: {0}", line);
 				buffer.append(line).append("\n");
 			}
 		}
@@ -60,21 +73,10 @@ public class ReadOutputThread implements Callable<UnixResult> {
 			LOG.ok("exit-status: {0}", execChannel.getExitStatus());
 		}
 
-//		StringBuilder errorMessage = new StringBuilder();
-//		if (errorStream.available() > 0) {
-//			BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
-//			String error;
-//			while ((error = errorReader.readLine()) != null) {
-//				errorMessage.append(error).append("\n");
-//			}
-//		}
-
 		LOG.ok("buffer {0}", buffer.toString());
 
 		return new UnixResult(execChannel.getExitStatus(), buffer.toString(), buffer.toString());
-        
-     
-    }
-    
-    
+
+	}
+
 }
