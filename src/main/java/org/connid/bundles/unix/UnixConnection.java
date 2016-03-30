@@ -17,9 +17,7 @@ package org.connid.bundles.unix;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -29,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.connid.bundles.unix.sshmanagement.ReadOutputThread;
-import org.connid.bundles.unix.sshmanagement.ReadShellOutputThread;
-import org.connid.bundles.unix.sshmanagement.ReadShellOutputThread2;
 import org.connid.bundles.unix.utilities.Constants;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
@@ -40,7 +36,6 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 
 import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
