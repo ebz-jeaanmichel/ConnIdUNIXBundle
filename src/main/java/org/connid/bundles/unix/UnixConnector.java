@@ -244,7 +244,11 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, Del
 
 	@Override
 	public void checkAlive() {
-		unixConnection.checkAlive(unixConfiguration);
+		
+		if (!unixConnection.checkAlive(unixConfiguration)){
+			throw new ConnectorException("Connection check failed");
+		}
+		LOG.ok("Connetion is OK (checkAlive)");
 
 	}
 }

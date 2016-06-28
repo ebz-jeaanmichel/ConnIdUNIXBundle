@@ -56,26 +56,17 @@ public class UnixConnection {
 
 	private Session session;
 
-	public void checkAlive(UnixConfiguration unixConfiguration) {
+	public boolean checkAlive(UnixConfiguration unixConfiguration) {
 
-		if (session != null && session.isConnected()) {
-			try {
-				session.sendKeepAliveMsg();
-			} catch (Exception e) {
-				throw new ConnectorException(e.getMessage(), e);
-			}
-			LOG.ok("Connection is OK");
-			return;
-		} else {
-			try {
-				initSession(unixConfiguration);
-			} catch (JSchException e) {
-				throw new ConnectorException(e.getMessage(), e);
-			}
+		if (unixConfiguration == null) {
+			return false;
 		}
-		if (!session.isConnected()) {
-			throw new ConnectionFailedException("Connection no more alive");
+		
+		if (session == null) {
+			return false;
 		}
+		
+		return session.isConnected();
 	}
 
 	public UnixConnection(final UnixConfiguration unixConfiguration) throws IOException, JSchException {
@@ -84,12 +75,12 @@ public class UnixConnection {
 	}
 
 	private Session initSession(final UnixConfiguration unixConfiguration) throws JSchException {
+		LOG.ok("Session initialization");
 		session = jSch.getSession(unixConfiguration.getAdmin(), unixConfiguration.getHostname(),
 				unixConfiguration.getPort());
 		session.setPassword(Utilities.getPlainPassword(unixConfiguration.getPassword()));
 		session.setConfig(Constants.STRICT_HOST_KEY_CHECKING, "no");
 		session.connect(unixConfiguration.getSshConnectionTimeout());
-		session.setServerAliveInterval(5000);
 		return session;
 	}
 
@@ -219,6 +210,9 @@ public class UnixConnection {
 			session.disconnect();
 			LOG.info("Session is disconnected.");
 		}
+		execChannel = null;
+		session = null;
+		
 	}
 
 }
