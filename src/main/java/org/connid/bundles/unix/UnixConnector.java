@@ -177,7 +177,7 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, Del
 			final OperationOptions oo) {
 		LOG.info("Execute query");
 		try {
-			new UnixExecuteQuery(unixConnection, oc, filter, rh).executeQuery();
+			new UnixExecuteQuery(unixConnection, oc, filter, oo, rh).executeQuery();
 		} catch (IOException ex) {
 			LOG.error("Error in connection process", ex);
 		} catch (JSchException ex) {

@@ -16,6 +16,7 @@
 package org.connid.bundles.unix.sshmanagement;
 
 import java.io.IOException;
+import java.rmi.server.Operation;
 import java.util.List;
 import java.util.Set;
 
@@ -33,6 +34,7 @@ import org.connid.bundles.unix.commands.UserDel;
 import org.connid.bundles.unix.commands.UserMod;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 
 import com.jcraft.jsch.JSchException;
 
@@ -55,22 +57,22 @@ public class CommandGenerator {
         return commandToExecute.toString();
     }
 
-    public String searchAllUser() {
+    public String searchAllUser(OperationOptions options) {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        return commandToExecute.append(General.getentPasswdFile()).toString();
+        return commandToExecute.append(General.getentPasswdFile(options)).toString();
     }
     
-    public String searchAllGroups() {
+    public String searchAllGroups(OperationOptions options) {
         StringBuilder commandToExecute = new StringBuilder();
         if (!unixConfiguration.isRoot()) {
             Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
             commandToExecute.append(sudoCommand.sudo());
         }
-        return commandToExecute.append(General.getentGroupFile()).toString();
+        return commandToExecute.append(General.getentGroupFile(options)).toString();
     }
 
     public String groupExists(final String groupname) {

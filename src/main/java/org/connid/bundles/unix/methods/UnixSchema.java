@@ -27,6 +27,8 @@ import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.ObjectClassInfoBuilder;
+import org.identityconnectors.framework.common.objects.OperationOptionInfo;
+import org.identityconnectors.framework.common.objects.OperationOptionInfoBuilder;
 import org.identityconnectors.framework.common.objects.OperationalAttributeInfos;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.SchemaBuilder;
@@ -50,6 +52,8 @@ public class UnixSchema {
 	        	attrBuilder.setMultiValued(attr.getOccurence() == -1);
 	        	attributes.add(attrBuilder.build());
 	        }
+	        
+	        
 	        // GROUP supports no authentication:
 	        final ObjectClassInfo ociInfoGroup =
 	                new ObjectClassInfoBuilder().setType(ObjectClass.GROUP_NAME).addAllAttributeInfo(
@@ -67,6 +71,7 @@ public class UnixSchema {
 	        attributes.add(OperationalAttributeInfos.LOCK_OUT);
 	        attributes.add(OperationalAttributeInfos.DISABLE_DATE);
 	        
+	        
 	        for (SchemaAccountAttribute attr : SchemaAccountAttribute.values()){
 	        	AttributeInfoBuilder attrBuilder = new AttributeInfoBuilder();
 	        	attrBuilder.setName(attr.getName());
@@ -79,8 +84,12 @@ public class UnixSchema {
 	        final ObjectClassInfo ociInfoAccount =
 	                new ObjectClassInfoBuilder().setType(ObjectClass.ACCOUNT_NAME).addAllAttributeInfo(
 	                        attributes).build();
+	        
 	        schemaBuilder.defineObjectClass(ociInfoAccount);
 
+	        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildPagedResultsOffset());
+	        schemaBuilder.defineOperationOption(OperationOptionInfoBuilder.buildPageSize());
+	        
 	        /*
 	         * SHELL
 	         */

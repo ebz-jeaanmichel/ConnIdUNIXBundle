@@ -40,6 +40,7 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ConnectorObjectBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 
@@ -58,13 +59,15 @@ public class Search {
 
 	private ResultsHandler handler = null;
 
+	private OperationOptions options;
 	
 	public Search(final UnixConnection unixConnection,
-			final ResultsHandler handler, final ObjectClass oc, final Operand filter) {
+			final ResultsHandler handler, final ObjectClass oc, final Operand filter, final OperationOptions options) {
 		this.unixConnection = unixConnection;
 		this.handler = handler;
 		this.objectClass = oc;
 		this.filter = filter;
+		this.options = options;
 	
 	}
 	
@@ -105,7 +108,7 @@ public class Search {
 
 	private PasswdFile searchAllUsers() throws JSchException, IOException {
 //		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllUser());
-		UnixResult result = unixConnection.executeRead(UnixConnector.getCommandGenerator().searchAllUser());
+		UnixResult result = unixConnection.executeRead(UnixConnector.getCommandGenerator().searchAllUser(options));
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		PasswdFile passwdFile = new PasswdFile(getFileOutput(result.getOutput()));
 		return passwdFile;
@@ -113,7 +116,7 @@ public class Search {
 
 	private GroupFile searchAllGroups() throws JSchException, IOException {
 //		UnixResult result = unixConnection.executeShell(UnixConnector.getCommandGenerator().searchAllGroups());
-		UnixResult result = unixConnection.executeRead(UnixConnector.getCommandGenerator().searchAllGroups());
+		UnixResult result = unixConnection.executeRead(UnixConnector.getCommandGenerator().searchAllGroups(options));
 		result.checkResult(Operation.GETENET, "Search failed", LOG);
 		GroupFile passwdFile = new GroupFile(getFileOutput(result.getOutput()));
 		return passwdFile;

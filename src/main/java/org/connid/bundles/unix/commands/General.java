@@ -15,16 +15,38 @@
  */
 package org.connid.bundles.unix.commands;
 
+import org.identityconnectors.framework.common.objects.OperationOptions;
+
 public class General {
 
-    public static String getentPasswdFile() {
-        return "getent passwd";
+    public static String getentPasswdFile(OperationOptions options) {
+    	StringBuilder getentCommand = new StringBuilder("getent passwd");
+ 
+    	appendPaging(options, getentCommand);
+        return getentCommand.toString();
     }
     
-    public static String getentGroupFile() {
-        return "getent group";
+    public static String getentGroupFile(OperationOptions options) {
+    	StringBuilder getentCommand = new StringBuilder("getent group");
+    	appendPaging(options, getentCommand);
+        return getentCommand.toString();
     }
 
+    private static void appendPaging(OperationOptions options, StringBuilder getentCommand){
+    	if (options != null && options.getPageSize() != null) {
+    		int offset = 0;
+    		if (options.getPagedResultsOffset() != null) {
+    			offset = options.getPagedResultsOffset().intValue();
+    		}
+    		
+    		getentCommand.append(" | sed -n '");
+    		getentCommand.append(offset);
+    		getentCommand.append(",+");
+    		getentCommand.append(options.getPageSize() != 0 ? options.getPageSize()-1 : options.getPageSize());
+    		getentCommand.append("p'");
+    	}
+    }
+    
     public static String searchUserIntoPasswdFile(final String username) {
         return "getent passwd " + username;
     }

@@ -24,6 +24,7 @@ import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 
 import com.jcraft.jsch.ChannelShell;
@@ -40,13 +41,16 @@ public class UnixExecuteQuery {
 	private ResultsHandler handler = null;
 
 	private ObjectClass objectClass = null;
+	
+	private OperationOptions options;
 
 	public UnixExecuteQuery(final UnixConnection connection, final ObjectClass oc, final Operand filter,
-			final ResultsHandler rh) throws IOException, JSchException {
+			final OperationOptions options, final ResultsHandler rh) throws IOException, JSchException {
 		this.connection = connection;
 		this.filter = filter;
 		this.handler = rh;
 		this.objectClass = oc;
+		this.options = options;
 	}
 
 	public final void executeQuery() {
@@ -68,27 +72,27 @@ public class UnixExecuteQuery {
 		}
 
 		if (filter == null) {
-			new Search(connection, handler, objectClass, null).searchAll();
+			new Search(connection, handler, objectClass, null, options).searchAll();
 			return;
 		}
 		switch (filter.getOperator()) {
 		case EQ:
-			new Search(connection, handler, objectClass, filter).equalSearch();
+			new Search(connection, handler, objectClass, filter, options).equalSearch();
 			break;
 		case SW:
-			new Search(connection, handler, objectClass, filter).startsWithSearch();
+			new Search(connection, handler, objectClass, filter, options).startsWithSearch();
 			break;
 		case EW:
-			new Search(connection, handler, objectClass, filter).endsWithSearch();
+			new Search(connection, handler, objectClass, filter, options).endsWithSearch();
 			break;
 		case C:
-			new Search(connection, handler, objectClass, filter).containsSearch();
+			new Search(connection, handler, objectClass, filter, options).containsSearch();
 			break;
 		case OR:
-			new Search(connection, handler, objectClass, filter.getFirstOperand()).orSearch();
+			new Search(connection, handler, objectClass, filter.getFirstOperand(), options).orSearch();
 			break;
 		case AND:
-			new Search(connection, handler, objectClass, filter).andSearch();
+			new Search(connection, handler, objectClass, filter, options).andSearch();
 			break;
 		default:
 			throw new ConnectorException("Wrong Operator");
