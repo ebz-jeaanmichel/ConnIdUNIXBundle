@@ -17,6 +17,7 @@
 package org.connid.bundles.unix.methods;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
@@ -41,7 +42,7 @@ public class UnixCommon {
 	private static final Log LOG = Log.getLog(UnixCommon.class);
 
 	public static void processPassword(UnixConnection unixConnection, String username, Set<Attribute> attrs)
-			throws JSchException, IOException {
+			throws JSchException, IOException, ConnectException {
 		final String password = Utilities.getPlainPassword(AttributeUtil.getPasswordValue(attrs));
 
 		if (StringUtil.isNotBlank(password)) {

@@ -18,6 +18,7 @@ package org.connid.bundles.unix;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -31,8 +32,8 @@ import org.connid.bundles.unix.utilities.Constants;
 import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
-import org.identityconnectors.framework.common.exceptions.ConnectionFailedException;
-import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConfigurationException;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.OperationTimeoutException;
 
 import com.jcraft.jsch.ChannelExec;
@@ -46,13 +47,11 @@ public class UnixConnection {
 
 	private UnixConfiguration unixConfiguration = null;
 
-	private ChannelExec execChannel;
+	// private ChannelExec execChannel;
 
 	private InputStream fromServer;
 
 	private InputStream errorStream;
-
-	private static JSch jSch = new JSch();
 
 	private Session session;
 
@@ -61,11 +60,11 @@ public class UnixConnection {
 		if (unixConfiguration == null) {
 			return false;
 		}
-		
+
 		if (session == null) {
 			return false;
 		}
-		
+
 		return session.isConnected();
 	}
 
@@ -73,32 +72,7 @@ public class UnixConnection {
 		this.unixConfiguration = unixConfiguration;
 		initSession(unixConfiguration);
 	}
-
-	private Session initSession(final UnixConfiguration unixConfiguration) throws JSchException {
-		LOG.ok("Session initialization");
-		session = jSch.getSession(unixConfiguration.getAdmin(), unixConfiguration.getHostname(),
-				unixConfiguration.getPort());
-		session.setPassword(Utilities.getPlainPassword(unixConfiguration.getPassword()));
-		session.setConfig(Constants.STRICT_HOST_KEY_CHECKING, "no");
-		session.connect(unixConfiguration.getSshConnectionTimeout());
-		return session;
-	}
-
-	private Session getInitializedSession() throws JSchException {
-		if (session == null || !session.isConnected()) {
-			session = initSession(unixConfiguration);
-		}
-		return session;
-	}
-
-	private ChannelExec createExecChannel(Session session, String command) throws JSchException, IOException {
-		ChannelExec execChannel = (ChannelExec) session.openChannel("exec");
-		fromServer = execChannel.getInputStream();
-		errorStream = execChannel.getErrStream();
-		execChannel.setPty(unixConfiguration.isUsePty());
-		return execChannel;
-	}
-
+	
 	public UnixResult execute(final String command) throws JSchException, IOException {
 		return executeInternal(command, false);
 	}
@@ -107,35 +81,131 @@ public class UnixConnection {
 		return executeInternal(command, true);
 	}
 
-	private UnixResult executeInternal(final String command, boolean isRead) throws JSchException, IOException {
-		Session session = getInitializedSession();
-
-		LOG.ok("Executing on: {0}", session.getHost());
-
-		ChannelExec execChannel = createExecChannel(session, command);
-		LOG.ok("Command to execute: " + command);
-		execChannel.setCommand(command);
-		execChannel.connect(unixConfiguration.getSshConnectionTimeout());
-		LOG.ok("Reading output");
-		UnixResult result = readOutput(new ReadOutputThread(fromServer, errorStream, execChannel, isRead));
-		execChannel.disconnect();
-		return result;
-	}
-
-	public UnixResult execute(final String command, final String password) throws JSchException, IOException {
+	public UnixResult execute(final String command, final String password)
+			throws JSchException, IOException, java.net.ConnectException {
 		Session session = getInitializedSession();
 		if (session == null || !session.isConnected()) {
 			session = initSession(unixConfiguration);
 		}
-		if (execChannel == null || !execChannel.isConnected()) {
-			execChannel = (ChannelExec) session.openChannel("exec");
-			fromServer = execChannel.getInputStream();
-			errorStream = execChannel.getErrStream();
+		ChannelExec execChannel = null;
+		try {
+			execChannel = createExecChannel(session, command);
+
+			return setPassword(execChannel, command, password);
+		} finally {
+			disconnectExecChannel(execChannel);
 		}
+
+	}
+
+	private Session initSession(final UnixConfiguration unixConfiguration) {
+		LOG.ok("Session initialization started");
+		JSch jSch = new JSch();
+		try {
+			session = jSch.getSession(unixConfiguration.getAdmin(), unixConfiguration.getHostname(),
+					unixConfiguration.getPort());
+		} catch (JSchException ex) {
+			throw new ConfigurationException(ex.getMessage(), ex);
+		}
+		session.setPassword(Utilities.getPlainPassword(unixConfiguration.getPassword()));
+		session.setConfig(Constants.STRICT_HOST_KEY_CHECKING, "no");
+		try {
+			session.connect(unixConfiguration.getSshConnectionTimeout());
+		} catch (JSchException ex) {
+			throw new ConnectionBrokenException(ex.getMessage(), ex);
+		}
+		LOG.ok("Session initialization finished {0}", session.isConnected());
+		return session;
+	}
+
+	private ChannelExec createExecChannel(Session session, String command) throws JSchException, IOException {
+		LOG.ok("Trying to open exec channel");
+		ChannelExec execChannel = (ChannelExec) session.openChannel("exec");
+		fromServer = execChannel.getInputStream();
+		errorStream = execChannel.getErrStream();
+		execChannel.setPty(unixConfiguration.isUsePty());
+		LOG.ok("Exec channel openned");
+		return execChannel;
+	}
+
+	private Session getInitializedSession() {
+		if (session == null || !session.isConnected()) {
+			session = initSession(unixConfiguration);
+		}
+		return session;
+	}
+	
+	private UnixResult executeInternal(final String command, boolean isRead)
+			throws JSchException, IOException {
+		Session session = getInitializedSession();
+
+		LOG.ok("Executing on: {0}", session.getHost());
+		LOG.ok("Configurations: timeout({0}), readTimout({1}), timeToWait({2})",
+				unixConfiguration.getSshConnectionTimeout(), unixConfiguration.getReadTimeout(),
+				unixConfiguration.getTimeToWait());
+
+		ChannelExec execChannel = null;
+		try {
+			execChannel = createExecChannel(session, command);
+			return executeInternal(execChannel, command, isRead);
+		} finally {
+			disconnectExecChannel(execChannel);
+		}
+
+	}
+
+	private UnixResult executeInternal(ChannelExec execChannel, String command, boolean isRead)
+			throws IOException {
+		try {
+			LOG.ok("Command to execute: " + command);
+			execChannel.setCommand(command);
+			execChannel.connect(unixConfiguration.getSshConnectionTimeout());
+		} catch (JSchException ex) {
+			execChannel = retryOpenChannel(command);
+		}
+		LOG.ok("Reading output");
+		return readOutput(new ReadOutputThread(fromServer, errorStream, execChannel, isRead));
+	}
+
+	private ChannelExec retryOpenChannel(String command) throws IOException {
+		Session session = getInitializedSession();
+
+		LOG.ok("Retrying open channel on: {0}", session.getHost());
+		LOG.ok("Configurations: timeout({0}), readTimout({1}), timeToWait({2})",
+				unixConfiguration.getSshConnectionTimeout(), unixConfiguration.getReadTimeout(),
+				unixConfiguration.getTimeToWait());
+
+		ChannelExec execChannel = null;
+		try {
+			execChannel = createExecChannel(session, command);
+			LOG.ok("Command to execute: " + command);
+			execChannel.setCommand(command);
+			execChannel.connect(unixConfiguration.getSshConnectionTimeout());
+		} catch (JSchException ex) {
+			disconnectExecChannel(execChannel);
+			throw new ConnectionBrokenException(ex.getMessage(), ex);
+		}
+		return execChannel;
+	}
+
+	private void disconnectExecChannel(ChannelExec execChannel) {
+		if (execChannel != null) {
+			execChannel.disconnect();
+		}
+		execChannel = null;
+		LOG.ok("Disconnecting execChannel");
+	}
+
+	private UnixResult setPassword(ChannelExec execChannel, String command, String password)
+			throws IOException {
 		LOG.ok("Command to execute: " + command);
 		execChannel.setCommand(command);
 		execChannel.setPty(unixConfiguration.isUsePty());
-		execChannel.connect(5000);
+		try {
+			execChannel.connect(unixConfiguration.getSshConnectionTimeout());
+		} catch (JSchException ex) {
+			execChannel = retryOpenChannel(command);
+		}
 		sleep(unixConfiguration.getTimeToWait());
 
 		OutputStream out = execChannel.getOutputStream();
@@ -143,6 +213,7 @@ public class UnixConnection {
 			out.write((password + "\n").getBytes());
 			out.flush();
 			sleep(unixConfiguration.getTimeToWait());
+
 			out.write((password + "\n").getBytes());
 			out.flush();
 			sleep(unixConfiguration.getTimeToWait());
@@ -186,6 +257,8 @@ public class UnixConnection {
 		if (session == null || !session.isConnected()) {
 			session = initSession(unixConfiguration);
 		}
+
+		session.sendKeepAliveMsg();
 	}
 
 	public void authenticate(final String username, final String password) throws JSchException, IOException {
@@ -193,7 +266,6 @@ public class UnixConnection {
 		if (session == null || !session.isConnected()) {
 			session = initSession(unixConfiguration);
 		}
-		session = jSch.getSession(username, unixConfiguration.getHostname(), unixConfiguration.getPort());
 		session.setPassword(password);
 		session.setConfig("StrictHostKeyChecking", "no");
 		session.connect(unixConfiguration.getSshConnectionTimeout());
@@ -201,18 +273,14 @@ public class UnixConnection {
 	}
 
 	public void disconnect() {
-		if (execChannel != null && execChannel.isConnected()) {
-			execChannel.disconnect();
-			LOG.info("Channel Exec is disconnected.");
-		}
-
+	
 		if (session != null && session.isConnected()) {
 			session.disconnect();
 			LOG.info("Session is disconnected.");
 		}
-		execChannel = null;
+	
 		session = null;
-		
+
 	}
 
 }

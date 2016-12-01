@@ -61,7 +61,7 @@ public class UnixDelete {
 		} catch (IOException e) {
 			LOG.error(e, "error during delete operation");
 			throw new ConnectionBrokenException(e);
-		}
+		} 
 	}
 
 	private void doDelete() throws IOException, InterruptedException, JSchException {

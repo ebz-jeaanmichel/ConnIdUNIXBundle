@@ -16,9 +16,12 @@
 package org.connid.bundles.unix.methods;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import javax.naming.CommunicationException;
 
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
@@ -30,6 +33,7 @@ import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.utilities.EvaluateCommandsResultOutput;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
@@ -65,8 +69,10 @@ public class UnixUpdate {
 		try {
 			return doUpdate(true);
 		} catch (JSchException e) {
+			LOG.error(e, "error during update operation");
 			throw new ConnectorException(e.getMessage(), e);
 		} catch (IOException e) {
+			LOG.error(e, "error during update operation");
 			throw new ConnectorException(e.getMessage(), e);
 		}
 	}
@@ -75,10 +81,12 @@ public class UnixUpdate {
 		try {
 			return doUpdate(false);
 		} catch (JSchException e) {
+			LOG.error(e, "error during update operation");
 			throw new ConnectorException(e.getMessage(), e);
 		} catch (IOException e) {
+			LOG.error(e, "error during update operation");
 			throw new ConnectorException(e.getMessage(), e);
-		}
+		} 
 	}
 
 	private Uid doUpdate(boolean isAdd) throws IOException, JSchException {
@@ -164,7 +172,7 @@ public class UnixUpdate {
 	}
 
 	private void processGroupMembership(StringBuilder commandBuilder, String newUserNameValue)
-			throws JSchException, IOException {
+			throws JSchException, IOException, ConnectException {
 		Attribute attr = AttributeUtil.find(SchemaAccountAttribute.GROUPS.getName(), attrs);
 		if (!UnixCommon.isEmpty(attr)) {
 

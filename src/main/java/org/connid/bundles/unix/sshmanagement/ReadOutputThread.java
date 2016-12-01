@@ -46,13 +46,13 @@ public class ReadOutputThread implements Callable<UnixResult> {
 	public UnixResult call() throws Exception {
 
 		String line;
-		LOG.ok("Channel closed: {0}", execChannel.isClosed());
+		LOG.ok("Channel for {1} closed: {0}", new Object[]{execChannel.isClosed(), execChannel.getSession().getHost()});
 
 		while (!execChannel.isClosed()) {
 			Thread.sleep(10);
 		}
 
-		LOG.ok("Channel closed: {0}", execChannel.isClosed());
+		LOG.ok("Channel for {1} closed: {0}", new Object[]{execChannel.isClosed(), execChannel.getSession().getHost()});
 
 		BufferedReader br = new BufferedReader(new InputStreamReader(fromServer));
 		StringBuilder buffer = new StringBuilder();

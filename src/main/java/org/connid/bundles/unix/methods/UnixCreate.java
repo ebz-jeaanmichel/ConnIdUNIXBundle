@@ -18,12 +18,15 @@ package org.connid.bundles.unix.methods;
 import java.io.IOException;
 import java.util.Set;
 
+import javax.naming.CommunicationException;
+
 import org.connid.bundles.unix.UnixConnection;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.UnixResult;
 import org.connid.bundles.unix.UnixResult.Operation;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.framework.common.exceptions.ConnectionBrokenException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -57,13 +60,15 @@ public class UnixCreate {
 		try {
 			return doCreate();
 		} catch (JSchException e) {
+			LOG.error(e, "error during create operation");
 			throw new ConnectorException(e.getMessage(), e);
 		} catch (IOException e) {
+			LOG.error(e, "error during create operation");
 			 throw new ConnectorException(e.getMessage(), e);
-		}
+		} 
 	}
 
-	private Uid doCreate() throws JSchException, IOException{
+	private Uid doCreate() throws JSchException, IOException {
 
 		
 		if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
@@ -108,7 +113,7 @@ public class UnixCreate {
 		return new Uid(objectName);
 	}
 	
-	private void processActivation(String username) throws JSchException, IOException{
+	private void processActivation(String username) throws JSchException, IOException {
 		StringBuilder activationCommand = new StringBuilder();
 		UnixCommon.appendCommand(activationCommand, UnixCommon.buildActivationCommand(unixConnection, username, attrs));
 		UnixCommon.appendCommand(activationCommand, UnixCommon.buildLockoutCommand(unixConnection, username, attrs));

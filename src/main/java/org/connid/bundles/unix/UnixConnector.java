@@ -76,6 +76,7 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, Del
 
 	@Override
 	public final void init(final Configuration configuration) {
+		LOG.ok("Unix Connector initialization started");
 		unixConfiguration = (UnixConfiguration) configuration;
 		commandGenerator = new CommandGenerator(unixConfiguration);
 		try {
@@ -87,6 +88,9 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, Del
 			LOG.error("Error in connection process", e);
 			throw new ConnectorException("Error in connection process: " + e.getMessage());
 		}
+		
+		LOG.ok("Unix Connector initialization finished");
+		
 	}
 
 	public static CommandGenerator getCommandGenerator() {
