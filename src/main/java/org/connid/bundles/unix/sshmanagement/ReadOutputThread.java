@@ -23,7 +23,7 @@ import java.util.concurrent.Callable;
 
 import org.connid.bundles.unix.UnixResult;
 import org.identityconnectors.common.logging.Log;
-import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
+//import org.omg.CosNaming.NamingContextExtPackage.StringNameHelper;
 
 import com.jcraft.jsch.ChannelExec;
 
