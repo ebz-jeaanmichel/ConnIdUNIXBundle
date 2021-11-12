@@ -122,7 +122,7 @@ public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, Del
 
 	@Override
 	public final Uid create(final ObjectClass oc, final Set<Attribute> set, final OperationOptions oo) {
-		LOG.info("Create new user");
+		LOG.info("Create OP");
 		Uid uidResult = null;
 		if (oc == null) {
 			throw new ConnectorException("Could not create object, no object class was specified.");

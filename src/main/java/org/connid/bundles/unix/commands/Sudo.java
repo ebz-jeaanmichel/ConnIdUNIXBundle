@@ -15,11 +15,12 @@
  */
 package org.connid.bundles.unix.commands;
 
+import org.connid.bundles.unix.utilities.Utilities;
 import org.identityconnectors.common.security.GuardedString;
 
 public class Sudo {
 
-//    private String sudoPassword = "";
+    private String sudoPassword = "";
     /**
      * sudo allows a permitted user to execute a command as the superuser or
      * another user, as specified in the sudoers file. The real and effective
@@ -48,7 +49,7 @@ public class Sudo {
      * file. As a result, sudo will prompt for a password (if one is required by
      * sudoers) and will not update the user’s timestamp file.
      */
-//    private static final String INVALIDATE_TIMESTAMP_OPTION = "-k";
+    private static final String INVALIDATE_TIMESTAMP_OPTION = "-k";
     /**
      * If given the -v (validate) option, sudo will update the user’s timestamp,
      * prompting for the user’s password if necessary. This extends the sudo
@@ -56,23 +57,23 @@ public class Sudo {
      * sudoers) but does not run a command.
      *
      */
-//    private static final String VALIDATE_OPTION = "-v";
+    private static final String VALIDATE_OPTION = "-v";
     /**
      * The -S (stdin) option causes sudo to read the password from the standard
      * input instead of the terminal device.
      */
-//    private static final String READ_PASSWORD_FROM_STDIN_OPTION = "-S";
+    private static final String READ_PASSWORD_FROM_STDIN_OPTION = "-S";
 
     public Sudo(final GuardedString sudoPassword) {
-//        this.sudoPassword = Utilities.getPlainPassword(sudoPassword);
+        this.sudoPassword = Utilities.getPlainPassword(sudoPassword);
     }
 
     private String createSudoCommand() {
-    	return SUDO_COMMAND;
+//    	return SUDO_COMMAND;
     	
-//        return SUDO_COMMAND + " " + INVALIDATE_TIMESTAMP_OPTION + "; echo "
-//                + sudoPassword + " | " + SUDO_COMMAND + " " + VALIDATE_OPTION
-//                + " " + READ_PASSWORD_FROM_STDIN_OPTION + "; " + SUDO_COMMAND;
+        return SUDO_COMMAND + " " + INVALIDATE_TIMESTAMP_OPTION + "; echo "
+                + sudoPassword + " | " + SUDO_COMMAND + " " + VALIDATE_OPTION
+                + " " + READ_PASSWORD_FROM_STDIN_OPTION + "; " + SUDO_COMMAND;
     }
 
     public String sudo() {

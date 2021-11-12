@@ -68,7 +68,7 @@ public class UnixAuthenticateTest extends SharedTestMethods {
     public final void authenticateTechUserTest() {
     	
     	final Uid authUid = connector.authenticate(ObjectClass.ACCOUNT, "midpoint",
-                new GuardedString("secret".toCharArray()), null);
+                new GuardedString("5ecr3t".toCharArray()), null);
         Assert.assertEquals("midpoint", authUid.getUidValue());
 //        connector.delete(ObjectClass.ACCOUNT, newAccount, null);
     }

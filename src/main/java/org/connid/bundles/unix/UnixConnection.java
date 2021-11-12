@@ -262,9 +262,12 @@ public class UnixConnection {
 	}
 
 	public void authenticate(final String username, final String password) throws JSchException, IOException {
-		Session session = getInitializedSession();
-		if (session == null || !session.isConnected()) {
-			session = initSession(unixConfiguration);
+		JSch jSch = new JSch();
+		session.disconnect();
+		try {
+			session = jSch.getSession(username, unixConfiguration.getHostname(), unixConfiguration.getPort());
+		} catch (JSchException ex) {
+			throw new ConfigurationException(ex.getMessage(), ex);
 		}
 		session.setPassword(password);
 		session.setConfig("StrictHostKeyChecking", "no");
