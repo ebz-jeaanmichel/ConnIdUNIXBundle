@@ -47,17 +47,17 @@ public class UnixDeleteUserTest extends SharedTestMethods {
                 new Uid(attrs.getWrongUsername()), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public final void deleteNullUser() {
         connector.delete(ObjectClass.ACCOUNT, null, null);
     }
     
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public final void deleteNull() {
         connector.delete(null, null, null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public final void deleteWithWrongObjectClass() {
         connector.delete(attrs.getWrongObjectClass(),
                 newAccount, null);

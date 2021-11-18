@@ -61,7 +61,7 @@ public class UnixUpdateGroupTest extends SharedTestMethods {
                 null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithWrongObjectClass() {
     	printTestTitle("updateWithWrongObjectClass");
         newAccount = connector.create(ObjectClass.GROUP,
@@ -71,7 +71,7 @@ public class UnixUpdateGroupTest extends SharedTestMethods {
                 null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithNullUid() {
     	printTestTitle("updateWithNullUid");
         connector.update(ObjectClass.GROUP, null,
@@ -96,7 +96,7 @@ public class UnixUpdateGroupTest extends SharedTestMethods {
                 createSetOfAttributes(name, null, true), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithNullUsername() {
     	printTestTitle("updateWithNullUsername");
         newAccount = connector.create(ObjectClass.GROUP,

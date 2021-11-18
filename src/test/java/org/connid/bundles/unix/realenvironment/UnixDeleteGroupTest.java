@@ -47,7 +47,7 @@ public class UnixDeleteGroupTest extends SharedTestMethods {
                 new Uid(attrs.getWrongGroupName()), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public final void deleteNullUser() {
         connector.delete(ObjectClass.GROUP, null, null);
     }

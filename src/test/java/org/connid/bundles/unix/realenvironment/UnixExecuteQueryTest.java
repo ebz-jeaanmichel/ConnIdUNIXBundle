@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.search.Operand;
 import org.connid.bundles.unix.search.Operator;
@@ -34,8 +35,8 @@ import org.junit.Test;
 
 public class UnixExecuteQueryTest extends SharedTestMethods {
 
-	private static final String TEST_CLASS = "UnixExecuteQueryTest.";
-	
+    private static final String TEST_CLASS = "UnixExecuteQueryTest.";
+
     private UnixConnector connector = null;
 
     private Name name = null;
@@ -54,7 +55,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchUser() {
-    	printTestTitle(TEST_CLASS+"searchUser()");
+        printTestTitle(TEST_CLASS + "searchUser()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -62,7 +63,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
         connector.executeQuery(ObjectClass.ACCOUNT,
                 new Operand(
-                Operator.EQ, Uid.NAME, newAccount.getUidValue(), false),
+                        Operator.EQ, Uid.NAME, newAccount.getUidValue(), false),
                 new ResultsHandler() {
 
                     @Override
@@ -79,12 +80,13 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchUserDisabled() {
-    	printTestTitle(TEST_CLASS+"searchUserDisabled()");
-       
+        printTestTitle(TEST_CLASS + "searchUserDisabled()");
+
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
+//        connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(new Name("a.nikolic"), attrs.getPassword(), false), null);
         connector.executeQuery(ObjectClass.ACCOUNT,
                 new Operand(
-                Operator.EQ, Uid.NAME, "a.nikolic", false),
+                        Operator.EQ, Uid.NAME, "a.nikolic", false),
                 new ResultsHandler() {
 
                     @Override
@@ -99,16 +101,16 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 //        connector.delete(ObjectClass.ACCOUNT, newAccount, null);
     }
 
-    
+
     @Test
     public final void searchStartsWithAttribute() {
-    	printTestTitle(TEST_CLASS+"searchStartsWithAttribute()");
+        printTestTitle(TEST_CLASS + "searchStartsWithAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
 
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
-        connector.executeQuery(ObjectClass.ACCOUNT, new Operand(Operator.SW, Uid.NAME, "crea", false),
+        connector.executeQuery(ObjectClass.ACCOUNT, new Operand(Operator.SW, Uid.NAME, "mid", false),
                 new ResultsHandler() {
 
                     @Override
@@ -123,16 +125,16 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchEndsWithAttribute() {
-    	printTestTitle(TEST_CLASS+"searchEndsWithAttribute()");
+        printTestTitle(TEST_CLASS + "searchEndsWithAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
         connector.executeQuery(ObjectClass.ACCOUNT,
                 new Operand(Operator.EW, Uid.NAME,
-                newAccount.getUidValue().substring(
-                newAccount.getUidValue().length() - 3,
-                newAccount.getUidValue().length()), false),
+                        newAccount.getUidValue().substring(
+                                newAccount.getUidValue().length() - 3,
+                                newAccount.getUidValue().length()), false),
                 new ResultsHandler() {
 
                     @Override
@@ -147,12 +149,12 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchContainsAttribute() {
-    	printTestTitle(TEST_CLASS+"searchContainsAttribute()");
+        printTestTitle(TEST_CLASS + "searchContainsAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
-        connector.executeQuery(ObjectClass.ACCOUNT, new Operand(Operator.C, Uid.NAME, "test", false),
+        connector.executeQuery(ObjectClass.ACCOUNT, new Operand(Operator.C, Uid.NAME, "point", false),
                 new ResultsHandler() {
 
                     @Override
@@ -168,7 +170,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
     @Test
     @Ignore
     public final void searchNotEqualsAttribute() {
-    	printTestTitle(TEST_CLASS+"searchNotEqualsAttribute()");
+        printTestTitle(TEST_CLASS + "searchNotEqualsAttribute()");
         newAccount = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -188,7 +190,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test(expected = ConnectorException.class)
     public final void searchNotExistsUser() {
-    	printTestTitle(TEST_CLASS+"searchNotExistsUser()");
+        printTestTitle(TEST_CLASS + "searchNotExistsUser()");
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
         connector.executeQuery(ObjectClass.ACCOUNT, new Operand(Operator.EQ, Uid.NAME, attrs.getWrongUsername(), false),
                 new ResultsHandler() {
@@ -203,7 +205,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchUserWithSameShell() {
-    	printTestTitle(TEST_CLASS+"searchUserWithSameShell()");
+        printTestTitle(TEST_CLASS + "searchUserWithSameShell()");
         Name name1 = new Name(attrs.getUsername());
         Uid newAccount1 = connector.create(ObjectClass.ACCOUNT,
                 createSetOfAttributes(name1, attrs.getPassword(), true), null);
@@ -236,7 +238,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
 
     @Test
     public final void searchGroup() {
-    	printTestTitle(TEST_CLASS+"searchGroup()");
+        printTestTitle(TEST_CLASS + "searchGroup()");
         newAccount = connector.create(ObjectClass.GROUP,
                 createSetOfAttributes(name, attrs.getPassword(), true), null);
         assertEquals(name.getNameValue(), newAccount.getUidValue());
@@ -256,9 +258,9 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
         connector.delete(ObjectClass.GROUP, newAccount, null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalStateException.class)
     public void executeQueryWithWrongObjectClass() {
-    	printTestTitle(TEST_CLASS+"executeQueryWithWrongObjectClass()");
+        printTestTitle(TEST_CLASS + "executeQueryWithWrongObjectClass()");
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
         connector.executeQuery(attrs.getWrongObjectClass(), null,
                 new ResultsHandler() {
@@ -271,9 +273,9 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
                 }, null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void executeQueryTestWithAllNull() {
-    	printTestTitle(TEST_CLASS+"executeQueryTestWithAllNull()");
+        printTestTitle(TEST_CLASS + "executeQueryTestWithAllNull()");
         connector.executeQuery(null, null, null, null);
     }
 

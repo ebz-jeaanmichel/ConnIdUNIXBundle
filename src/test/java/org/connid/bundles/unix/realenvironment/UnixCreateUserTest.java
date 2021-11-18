@@ -125,22 +125,22 @@ public class UnixCreateUserTest extends SharedTestMethods {
 		}
 	}
 	
-	@Test(expected = ConnectorException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void createWithWrongObjectClass() {
 		printTestTitle("createWithWrongObjectClass");
 		connector.create(attrs.getWrongObjectClass(), createSetOfAttributes(name, attrs.getPassword(), true), null);
 	}
 
-	@Test(expected = ConnectorException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void createTestWithNull() {
 		printTestTitle("createTestWithNull");
 		connector.create(attrs.getWrongObjectClass(), null, null);
 	}
 
-	@Test(expected = ConnectorException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void createTestWithNameNull() {
 		printTestTitle("createTestWithNameNull");
-		connector.create(attrs.getWrongObjectClass(), createSetOfAttributes(null, attrs.getPassword(), true), null);
+		connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(null, attrs.getPassword(), true), null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)

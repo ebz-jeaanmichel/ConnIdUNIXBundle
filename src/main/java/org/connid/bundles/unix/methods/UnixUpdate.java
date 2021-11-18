@@ -47,161 +47,169 @@ import com.jcraft.jsch.JSchException;
 
 public class UnixUpdate {
 
-	private static final Log LOG = Log.getLog(UnixUpdate.class);
+    private static final Log LOG = Log.getLog(UnixUpdate.class);
 
-	private Set<Attribute> attrs = null;
+    private Set<Attribute> attrs = null;
 
-	private UnixConnection unixConnection = null;
+    private UnixConnection unixConnection = null;
 
-	private Uid uid = null;
+    private Uid uid = null;
 
-	private ObjectClass objectClass = null;
+    private ObjectClass objectClass = null;
 
-	public UnixUpdate(final ObjectClass oc, final UnixConnection unixConnection, final Uid uid,
-			final Set<Attribute> attrs) throws IOException, JSchException {
-		this.uid = uid;
-		this.attrs = attrs;
-		this.unixConnection = unixConnection;
-		objectClass = oc;
-	}
+    public UnixUpdate(final ObjectClass oc, final UnixConnection unixConnection, final Uid uid,
+                      final Set<Attribute> attrs) throws IOException, JSchException {
+        this.uid = uid;
+        this.attrs = attrs;
+        this.unixConnection = unixConnection;
+        objectClass = oc;
+    }
 
-	public Uid update() {
-		try {
-			return doUpdate(true);
-		} catch (JSchException e) {
-			LOG.error(e, "error during update operation");
-			throw new ConnectorException(e.getMessage(), e);
-		} catch (IOException e) {
-			LOG.error(e, "error during update operation");
-			throw new ConnectorException(e.getMessage(), e);
-		}
-	}
+    public Uid update() {
+        try {
+            return doUpdate(true);
+        } catch (JSchException e) {
+            LOG.error(e, "error during update operation");
+            throw new ConnectorException(e.getMessage(), e);
+        } catch (IOException e) {
+            LOG.error(e, "error during update operation");
+            throw new ConnectorException(e.getMessage(), e);
+        }
+    }
 
-	public Uid removeAttributes() {
-		try {
-			return doUpdate(false);
-		} catch (JSchException e) {
-			LOG.error(e, "error during update operation");
-			throw new ConnectorException(e.getMessage(), e);
-		} catch (IOException e) {
-			LOG.error(e, "error during update operation");
-			throw new ConnectorException(e.getMessage(), e);
-		} 
-	}
+    public Uid removeAttributes() {
+        try {
+            return doUpdate(false);
+        } catch (JSchException e) {
+            LOG.error(e, "error during update operation");
+            throw new ConnectorException(e.getMessage(), e);
+        } catch (IOException e) {
+            LOG.error(e, "error during update operation");
+            throw new ConnectorException(e.getMessage(), e);
+        }
+    }
 
-	private Uid doUpdate(boolean isAdd) throws IOException, JSchException {
+    private Uid doUpdate(boolean isAdd) throws IOException, JSchException {
 
-		if (uid == null || StringUtil.isBlank(uid.getUidValue())) {
-			throw new IllegalArgumentException("No Uid attribute provided in the attributes");
-		}
+        if (uid == null || StringUtil.isBlank(uid.getUidValue())) {
+            throw new IllegalArgumentException("No Uid attribute provided in the attributes");
+        }
 
-		LOG.info("Update user: " + uid.getUidValue());
+        LOG.info("Update user: " + uid.getUidValue());
 
-		if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
-			throw new IllegalStateException("Wrong object class");
-		}
+        if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
+            throw new IllegalArgumentException("Wrong object class");
+        }
 
-		Name newUserName = AttributeUtil.getNameFromAttributes(attrs);
+        Name newUserName = null;
+        for (Attribute attr : attrs) {
+            if (attr != null) {
+                if (attr.is(Name.NAME)) {
+                    newUserName = AttributeUtil.getNameFromAttributes(attrs);
+                    break;
+                }
+            }
+        }
 
-		String newUserNameValue = null;
-		if (newUserName != null && StringUtil.isNotBlank(newUserName.getNameValue())) {
-			newUserNameValue = newUserName.getNameValue();
-		} else {
-			newUserNameValue = uid.getUidValue();
-		}
+        String newUserNameValue = null;
+        if (newUserName != null && StringUtil.isNotBlank(newUserName.getNameValue())) {
+            newUserNameValue = newUserName.getNameValue();
+        } else {
+            newUserNameValue = uid.getUidValue();
+        }
 
-		if (objectClass.equals(ObjectClass.ACCOUNT)) {
-			StringBuilder commandBuilder = new StringBuilder();
-			// ChannelShell shellChannel = unixConnection.createShellChannel();
-			if (!isAdd) {
-				processGroupMembership(commandBuilder, newUserNameValue);
-			}
+        if (objectClass.equals(ObjectClass.ACCOUNT)) {
+            StringBuilder commandBuilder = new StringBuilder();
+            // ChannelShell shellChannel = unixConnection.createShellChannel();
+            if (!isAdd) {
+                processGroupMembership(commandBuilder, newUserNameValue);
+            }
 
-			String modCommand = UnixConnector.getCommandGenerator().updateUser(uid.getUidValue(), attrs, isAdd);
-			UnixCommon.appendCommand(commandBuilder, modCommand);
+            String modCommand = UnixConnector.getCommandGenerator().updateUser(uid.getUidValue(), attrs, isAdd);
+            UnixCommon.appendCommand(commandBuilder, modCommand);
 
-			String activation = UnixCommon.buildActivationCommand(unixConnection, newUserNameValue, attrs);
-			UnixCommon.appendCommand(commandBuilder, activation);
-			UnixCommon.appendCommand(commandBuilder,
-					UnixCommon.buildLockoutCommand(unixConnection, newUserNameValue, attrs));
+            String activation = UnixCommon.buildActivationCommand(unixConnection, newUserNameValue, attrs);
+            UnixCommon.appendCommand(commandBuilder, activation);
+            UnixCommon.appendCommand(commandBuilder,
+                    UnixCommon.buildLockoutCommand(unixConnection, newUserNameValue, attrs));
 
-			if (newUserName != null) {
-				String oldUser = unixConnection
-						.executeRead(UnixConnector.getCommandGenerator().userExists(uid.getUidValue())).getOutput();
-				if (StringUtil.isBlank(oldUser)) {
-					throw new UnknownUidException("User do not exists");
-				}
-				PasswdRow oldUserRow = EvaluateCommandsResultOutput.toPasswdRow(oldUser);
-				String moveHomeDir = moveHomeDirectory(oldUserRow, unixConnection, attrs);
-				UnixCommon.appendCommand(commandBuilder, moveHomeDir);
-				String groupRename = UnixConnector.getCommandGenerator().renamePrimaryGroup(oldUserRow.getUsername(),
-						newUserNameValue);
-				UnixCommon.appendCommand(commandBuilder, groupRename);
-			}
+            if (newUserName != null) {
+                String oldUser = unixConnection
+                        .executeRead(UnixConnector.getCommandGenerator().userExists(uid.getUidValue())).getOutput();
+                if (StringUtil.isBlank(oldUser)) {
+                    throw new UnknownUidException("User do not exists");
+                }
+                PasswdRow oldUserRow = EvaluateCommandsResultOutput.toPasswdRow(oldUser);
+                String moveHomeDir = moveHomeDirectory(oldUserRow, unixConnection, attrs);
+                UnixCommon.appendCommand(commandBuilder, moveHomeDir);
+                String groupRename = UnixConnector.getCommandGenerator().renamePrimaryGroup(oldUserRow.getUsername(),
+                        newUserNameValue);
+                UnixCommon.appendCommand(commandBuilder, groupRename);
+            }
 
-			if (isAdd) {
-				UnixCommon.appendCreateOrUpdatePublicKeyCommand(commandBuilder, newUserNameValue, attrs, false);
-				UnixCommon.appendCreateOrUpdatePermissions(commandBuilder, newUserNameValue, attrs, true);
-			} else {
-				UnixCommon.appendDeletePublicKeyCommand(commandBuilder, newUserNameValue, attrs);
-				Attribute permissions = AttributeUtil.find(SchemaAccountAttribute.PERMISIONS.getName(), attrs);
-				if (permissions != null) {
-					UnixCommon.appendRemovePermissions(commandBuilder, newUserNameValue, true);
-				}
-			}
+            if (isAdd) {
+                UnixCommon.appendCreateOrUpdatePublicKeyCommand(commandBuilder, newUserNameValue, attrs, false);
+                UnixCommon.appendCreateOrUpdatePermissions(commandBuilder, newUserNameValue, attrs, true);
+            } else {
+                UnixCommon.appendDeletePublicKeyCommand(commandBuilder, newUserNameValue, attrs);
+                Attribute permissions = AttributeUtil.find(SchemaAccountAttribute.PERMISIONS.getName(), attrs);
+                if (permissions != null) {
+                    UnixCommon.appendRemovePermissions(commandBuilder, newUserNameValue, true);
+                }
+            }
 
-			if (StringUtil.isNotBlank(commandBuilder.toString())) {
-				UnixResult result = unixConnection.execute(commandBuilder.toString());
-				result.checkResult(Operation.USERMOD, "Could not modify user", LOG);
-			}
-			if (isAdd) {
-				UnixCommon.processPassword(unixConnection, newUserNameValue, attrs);
-			} else {
-				UnixCommon.resetPassword(unixConnection, newUserNameValue, attrs);
-			}
+            if (StringUtil.isNotBlank(commandBuilder.toString())) {
+                UnixResult result = unixConnection.execute(commandBuilder.toString());
+                result.checkResult(Operation.USERMOD, "Could not modify user", LOG);
+            }
+            if (isAdd) {
+                UnixCommon.processPassword(unixConnection, newUserNameValue, attrs);
+            } else {
+                UnixCommon.resetPassword(unixConnection, newUserNameValue, attrs);
+            }
 
-		} else if (objectClass.equals(ObjectClass.GROUP)) {
-			StringBuilder commandBuilder = new StringBuilder();
-			String modCommand = UnixConnector.getCommandGenerator().updateGroup(uid.getUidValue(), attrs);
-			UnixCommon.appendCommand(commandBuilder, modCommand);
-			UnixCommon.appendCreateOrUpdatePermissions(commandBuilder, uid.getUidValue(), attrs, false);
-			UnixResult result = unixConnection.execute(commandBuilder.toString());
-			result.checkResult(Operation.GROUPMOD, "Could not modify group", LOG);
-		}
-		return new Uid(newUserNameValue);
-	}
+        } else if (objectClass.equals(ObjectClass.GROUP)) {
+            StringBuilder commandBuilder = new StringBuilder();
+            String modCommand = UnixConnector.getCommandGenerator().updateGroup(uid.getUidValue(), attrs);
+            UnixCommon.appendCommand(commandBuilder, modCommand);
+            UnixCommon.appendCreateOrUpdatePermissions(commandBuilder, uid.getUidValue(), attrs, false);
+            UnixResult result = unixConnection.execute(commandBuilder.toString());
+            result.checkResult(Operation.GROUPMOD, "Could not modify group", LOG);
+        }
+        return new Uid(newUserNameValue);
+    }
 
-	private void processGroupMembership(StringBuilder commandBuilder, String newUserNameValue)
-			throws JSchException, IOException, ConnectException {
-		Attribute attr = AttributeUtil.find(SchemaAccountAttribute.GROUPS.getName(), attrs);
-		if (!UnixCommon.isEmpty(attr)) {
+    private void processGroupMembership(StringBuilder commandBuilder, String newUserNameValue)
+            throws JSchException, IOException, ConnectException {
+        Attribute attr = AttributeUtil.find(SchemaAccountAttribute.GROUPS.getName(), attrs);
+        if (!UnixCommon.isEmpty(attr)) {
 
-			List<String> groups = EvaluateCommandsResultOutput.evaluateUserGroups(
-					unixConnection.executeRead(General.searchGroupsForUser(newUserNameValue)).getOutput());
+            List<String> groups = EvaluateCommandsResultOutput.evaluateUserGroups(
+                    unixConnection.executeRead(General.searchGroupsForUser(newUserNameValue)).getOutput());
 
-			List<Object> newGroups = new ArrayList<Object>();
-			for (String group : groups) {
-				if (attr.getValue().contains(group)) {
-					continue;
-				}
-				newGroups.add(group);
-			}
+            List<Object> newGroups = new ArrayList<Object>();
+            for (String group : groups) {
+                if (attr.getValue().contains(group)) {
+                    continue;
+                }
+                newGroups.add(group);
+            }
 
-			UnixCommon.appendCommand(commandBuilder,
-					UnixConnector.getCommandGenerator().buildRemoveFromGroupsCommand(newUserNameValue, newGroups));
-		}
+            UnixCommon.appendCommand(commandBuilder,
+                    UnixConnector.getCommandGenerator().buildRemoveFromGroupsCommand(newUserNameValue, newGroups));
+        }
 
-	}
+    }
 
-	private static String moveHomeDirectory(PasswdRow oldUserRow, UnixConnection unixConnection, Set<Attribute> attrs)
-			throws JSchException, IOException {
+    private static String moveHomeDirectory(PasswdRow oldUserRow, UnixConnection unixConnection, Set<Attribute> attrs)
+            throws JSchException, IOException {
 
-		Attribute newHomeDir = AttributeUtil.find(SchemaAccountAttribute.HOME.getName(), attrs);
-		if (newHomeDir != null && newHomeDir.getValue() != null && !newHomeDir.getValue().isEmpty()) {
-			return UnixConnector.getCommandGenerator().moveHomeDirectory(oldUserRow.getHomeDirectory(),
-					(String) newHomeDir.getValue().get(0));
-		}
-		return null;
+        Attribute newHomeDir = AttributeUtil.find(SchemaAccountAttribute.HOME.getName(), attrs);
+        if (newHomeDir != null && newHomeDir.getValue() != null && !newHomeDir.getValue().isEmpty()) {
+            return UnixConnector.getCommandGenerator().moveHomeDirectory(oldUserRow.getHomeDirectory(),
+                    (String) newHomeDir.getValue().get(0));
+        }
+        return null;
 
-	}
+    }
 }

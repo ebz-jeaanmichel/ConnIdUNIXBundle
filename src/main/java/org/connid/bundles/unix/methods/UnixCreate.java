@@ -38,88 +38,95 @@ import com.jcraft.jsch.JSchException;
 
 public class UnixCreate {
 
-	private static final Log LOG = Log.getLog(UnixCreate.class);
+    private static final Log LOG = Log.getLog(UnixCreate.class);
 
-	private Set<Attribute> attrs = null;
+    private Set<Attribute> attrs = null;
 
-	private UnixConnection unixConnection = null;
+    private UnixConnection unixConnection = null;
 
-	private ObjectClass objectClass = null;
+    private ObjectClass objectClass = null;
 
 
-	boolean status = false;
+    boolean status = false;
 
-	public UnixCreate(final ObjectClass oc, final UnixConnection unixConnection, final Set<Attribute> attributes)
-			throws IOException, JSchException {
-		this.attrs = attributes;
-		this.unixConnection = unixConnection;
-		objectClass = oc;
-	}
+    public UnixCreate(final ObjectClass oc, final UnixConnection unixConnection, final Set<Attribute> attributes)
+            throws IOException, JSchException {
+        this.attrs = attributes;
+        this.unixConnection = unixConnection;
+        objectClass = oc;
+    }
 
-	public Uid create() {
-		try {
-			return doCreate();
-		} catch (JSchException e) {
-			LOG.error(e, "error during create operation");
-			throw new ConnectorException(e.getMessage(), e);
-		} catch (IOException e) {
-			LOG.error(e, "error during create operation");
-			 throw new ConnectorException(e.getMessage(), e);
-		} 
-	}
+    public Uid create() {
+        try {
+            return doCreate();
+        } catch (JSchException e) {
+            LOG.error(e, "error during create operation");
+            throw new ConnectorException(e.getMessage(), e);
+        } catch (IOException e) {
+            LOG.error(e, "error during create operation");
+            throw new ConnectorException(e.getMessage(), e);
+        }
+    }
 
-	private Uid doCreate() throws JSchException, IOException {
+    private Uid doCreate() throws JSchException, IOException {
 
-		
-		if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
-			throw new IllegalStateException("Wrong object class");
-		}
 
-		final Name name = AttributeUtil.getNameFromAttributes(attrs);
+        if (!objectClass.equals(ObjectClass.ACCOUNT) && (!objectClass.equals(ObjectClass.GROUP))) {
+            throw new IllegalArgumentException("Wrong object class");
+        }
+        Name name = null;
+        for (Attribute attr : attrs) {
+            if (attr != null) {
+                if (attr.is(Name.NAME)) {
+                    name = AttributeUtil.getNameFromAttributes(attrs);
+                    break;
+                }
+            }
+        }
 
-		if (name == null || StringUtil.isBlank(name.getNameValue())) {
-			throw new IllegalArgumentException("No Name attribute provided in the attributes");
-		}
+        if (name == null || StringUtil.isBlank(name.getNameValue())) {
+            throw new IllegalArgumentException("No Name attribute provided in the attributes");
+        }
 
-		String objectName = name.getNameValue();
-		if (objectClass.equals(ObjectClass.ACCOUNT)) {
-			StringBuilder commandToExecute = new StringBuilder();
-			String addCommand = UnixConnector.getCommandGenerator().createUser(objectName, attrs);
-			UnixCommon.appendCommand(commandToExecute, addCommand);
-			
-			UnixCommon.appendCreateOrUpdatePublicKeyCommand(commandToExecute, objectName, attrs, false);
-			
-			UnixCommon.appendCreateOrUpdatePermissions(commandToExecute, objectName, attrs, true);
-			
-			UnixResult result= unixConnection.execute(commandToExecute.toString());
-			
-			result.checkResult(Operation.USERADD, "Could not create user", LOG);
+        String objectName = name.getNameValue();
+        if (objectClass.equals(ObjectClass.ACCOUNT)) {
+            StringBuilder commandToExecute = new StringBuilder();
+            String addCommand = UnixConnector.getCommandGenerator().createUser(objectName, attrs);
+            UnixCommon.appendCommand(commandToExecute, addCommand);
 
-			UnixCommon.processPassword(unixConnection, objectName, attrs);
-			processActivation(objectName);
+            UnixCommon.appendCreateOrUpdatePublicKeyCommand(commandToExecute, objectName, attrs, false);
 
-		} else if (objectClass.equals(ObjectClass.GROUP)) {
-			StringBuilder commandToExecute = new StringBuilder();
-			String addCommand = UnixConnector.getCommandGenerator().createGroup(objectName, attrs);
-			UnixCommon.appendCommand(commandToExecute, addCommand);
-			
-			UnixCommon.appendCreateOrUpdatePermissions(commandToExecute, objectName, attrs, false);
-			
-			UnixResult result = unixConnection.execute(commandToExecute.toString());
-			result.checkResult(Operation.GROUPADD, "Could not create group", LOG);
-		}
-		
+            UnixCommon.appendCreateOrUpdatePermissions(commandToExecute, objectName, attrs, true);
 
-		return new Uid(objectName);
-	}
-	
-	private void processActivation(String username) throws JSchException, IOException {
-		StringBuilder activationCommand = new StringBuilder();
-		UnixCommon.appendCommand(activationCommand, UnixCommon.buildActivationCommand(unixConnection, username, attrs));
-		UnixCommon.appendCommand(activationCommand, UnixCommon.buildLockoutCommand(unixConnection, username, attrs));
-		if (StringUtil.isNotBlank(activationCommand.toString())){
-			UnixResult result = unixConnection.execute(activationCommand.toString());
-			result.checkResult(Operation.USERMOD, "Could not change user activation status", LOG);
-		}
-	}
+            UnixResult result = unixConnection.execute(commandToExecute.toString());
+
+            result.checkResult(Operation.USERADD, "Could not create user", LOG);
+
+            UnixCommon.processPassword(unixConnection, objectName, attrs);
+            processActivation(objectName);
+
+        } else if (objectClass.equals(ObjectClass.GROUP)) {
+            StringBuilder commandToExecute = new StringBuilder();
+            String addCommand = UnixConnector.getCommandGenerator().createGroup(objectName, attrs);
+            UnixCommon.appendCommand(commandToExecute, addCommand);
+
+            UnixCommon.appendCreateOrUpdatePermissions(commandToExecute, objectName, attrs, false);
+
+            UnixResult result = unixConnection.execute(commandToExecute.toString());
+            result.checkResult(Operation.GROUPADD, "Could not create group", LOG);
+        }
+
+
+        return new Uid(objectName);
+    }
+
+    private void processActivation(String username) throws JSchException, IOException {
+        StringBuilder activationCommand = new StringBuilder();
+        UnixCommon.appendCommand(activationCommand, UnixCommon.buildActivationCommand(unixConnection, username, attrs));
+        UnixCommon.appendCommand(activationCommand, UnixCommon.buildLockoutCommand(unixConnection, username, attrs));
+        if (StringUtil.isNotBlank(activationCommand.toString())) {
+            UnixResult result = unixConnection.execute(activationCommand.toString());
+            result.checkResult(Operation.USERMOD, "Could not change user activation status", LOG);
+        }
+    }
 }

@@ -39,159 +39,161 @@ import com.jcraft.jsch.JSchException;
 
 public class UnixCommon {
 
-	private static final Log LOG = Log.getLog(UnixCommon.class);
+    private static final Log LOG = Log.getLog(UnixCommon.class);
 
-	public static void processPassword(UnixConnection unixConnection, String username, Set<Attribute> attrs)
-			throws JSchException, IOException, ConnectException {
-		final String password = Utilities.getPlainPassword(AttributeUtil.getPasswordValue(attrs));
+    public static void processPassword(UnixConnection unixConnection, String username, Set<Attribute> attrs)
+            throws JSchException, IOException, ConnectException {
+        final String password = Utilities.getPlainPassword(AttributeUtil.getPasswordValue(attrs));
 
-		if (StringUtil.isNotBlank(password)) {
-			UnixResult result = unixConnection.execute(
-					UnixConnector.getCommandGenerator().setPassword(username, password), password);
+        if (StringUtil.isNotBlank(password)) {
+            UnixResult result = unixConnection.execute(
+                    UnixConnector.getCommandGenerator().setPassword(username, password), password);
 
-			result.checkResult(Operation.PASSWD, "Could not set password", LOG);
-		}
+            result.checkResult(Operation.PASSWD, "Could not set password", LOG);
+        }
 
-	}
+    }
 
-	public static void resetPassword(UnixConnection unixConnection, String username, Set<Attribute> attrs)
-			throws JSchException, IOException {
-		if (AttributeUtil.find(OperationalAttributes.PASSWORD_NAME, attrs) == null) {
-			return;
-		}
+    public static void resetPassword(UnixConnection unixConnection, String username, Set<Attribute> attrs)
+            throws JSchException, IOException {
+        if (AttributeUtil.find(OperationalAttributes.PASSWORD_NAME, attrs) == null) {
+            return;
+        }
 
-		UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator()
-				.resetPassword(username));
-		result.checkResult(Operation.PASSWD, "Could not reset password", LOG);
+        UnixResult result = unixConnection.execute(UnixConnector.getCommandGenerator()
+                .resetPassword(username));
+        result.checkResult(Operation.PASSWD, "Could not reset password", LOG);
 
-	}
+    }
 
-	public static void appendCommand(StringBuilder commandBuilder, String command) {
-		if (StringUtil.isBlank(command)) {
-			return;
-		}
-		if (StringUtil.isNotBlank(commandBuilder.toString())) {
-			commandBuilder.append(" && ");
-			commandBuilder.append(command);
-		} else {
-			commandBuilder.append(command);
-		}
-	}
+    public static void appendCommand(StringBuilder commandBuilder, String command) {
+        if (StringUtil.isBlank(command)) {
+            return;
+        }
+        if (StringUtil.isNotBlank(commandBuilder.toString())) {
+            commandBuilder.append(" && ");
+            commandBuilder.append(command);
+        } else {
+            commandBuilder.append(command);
+        }
+    }
 
-	public static void appendCreateOrUpdatePublicKeyCommand(StringBuilder commandBuilder, String username,
-			Set<Attribute> attrs, boolean isUpdate) {
-		Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
-		if (publiKey != null) {
-			if (publiKey.getValue() != null && !publiKey.getValue().isEmpty()) {
+    public static void appendCreateOrUpdatePublicKeyCommand(StringBuilder commandBuilder, String username,
+                                                            Set<Attribute> attrs, boolean isUpdate) {
+        Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
+        if (publiKey != null) {
+            if (publiKey.getValue() != null && !publiKey.getValue().isEmpty()) {
 
-				appendCommand(commandBuilder, UnixConnector.getCommandGenerator().createSshKeyDir(username));
-				if (isUpdate) {
-					appendCommand(commandBuilder,
-							UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "777", "777"));
-				}
-				String pubKeyCommand = UnixConnector.getCommandGenerator().setPublicKey(username,
-						(String) publiKey.getValue().get(0));
-				appendCommand(commandBuilder, pubKeyCommand);
-				appendCommand(commandBuilder,
-						UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "700", "600"));
-				appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyOwner(username));
-			} else {
-				appendDeletePublicKeyCommand(commandBuilder, username, attrs);
-			}
-		}
-	}
+                appendCommand(commandBuilder, UnixConnector.getCommandGenerator().createSshKeyDir(username));
+                if (isUpdate) {
+                    appendCommand(commandBuilder,
+                            UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "777", "777"));
+                }
+                String pubKeyCommand = UnixConnector.getCommandGenerator().setPublicKey(username,
+                        (String) publiKey.getValue().get(0));
+                appendCommand(commandBuilder, pubKeyCommand);
+                appendCommand(commandBuilder,
+                        UnixConnector.getCommandGenerator().changeSshKeyPermision(username, "700", "600"));
+                appendCommand(commandBuilder, UnixConnector.getCommandGenerator().changeSshKeyOwner(username));
+            } else {
+                appendDeletePublicKeyCommand(commandBuilder, username, attrs);
+            }
+        }
+    }
 
-	public static void appendCreateOrUpdatePermissions(StringBuilder commandBuilder, String username,
-			Set<Attribute> attrs, boolean isUser) {
-		Attribute permissions = null;
-		if (isUser) {
-			permissions = AttributeUtil.find(SchemaAccountAttribute.PERMISIONS.getName(), attrs);
-		} else {
-			permissions = AttributeUtil.find(SchemaGroupAttribute.PERMISSIONS.getName(), attrs);
-		}
-		if (permissions != null) {
-			if (permissions.getValue() != null && !permissions.getValue().isEmpty()) {
-				String permissionsCommand = UnixConnector.getCommandGenerator().setPermissions(
-						isUser ? username : "%" + username, (String) permissions.getValue().get(0), isUser);
-				appendCommand(commandBuilder, permissionsCommand);
-			} else {
-				appendRemovePermissions(commandBuilder, username, isUser);
-			}
-		}
-	}
+    public static void appendCreateOrUpdatePermissions(StringBuilder commandBuilder, String username,
+                                                       Set<Attribute> attrs, boolean isUser) {
+        if (attrs != null) {
+            Attribute permissions = null;
+            if (isUser) {
+                permissions = AttributeUtil.find(SchemaAccountAttribute.PERMISIONS.getName(), attrs);
+            } else {
+                permissions = AttributeUtil.find(SchemaGroupAttribute.PERMISSIONS.getName(), attrs);
+            }
+            if (permissions != null) {
+                if (permissions.getValue() != null && !permissions.getValue().isEmpty()) {
+                    String permissionsCommand = UnixConnector.getCommandGenerator().setPermissions(
+                            isUser ? username : "%" + username, (String) permissions.getValue().get(0), isUser);
+                    appendCommand(commandBuilder, permissionsCommand);
+                } else {
+                    appendRemovePermissions(commandBuilder, username, isUser);
+                }
+            }
+        }
+    }
 
-	public static void appendRemovePermissions(StringBuilder commandBuilder, String username, boolean isUser) {
-		String permissionsCommand = UnixConnector.getCommandGenerator().removePermissions(username, isUser);
-		appendCommand(commandBuilder, permissionsCommand);
-	}
+    public static void appendRemovePermissions(StringBuilder commandBuilder, String username, boolean isUser) {
+        String permissionsCommand = UnixConnector.getCommandGenerator().removePermissions(username, isUser);
+        appendCommand(commandBuilder, permissionsCommand);
+    }
 
-	public static void appendDeletePublicKeyCommand(StringBuilder commandBuilder, String username,
-			Set<Attribute> attrs) {
-		Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
-		if (publiKey != null) {
-			LOG.ok("Preparing command for deleting public key");
-			appendCommand(commandBuilder, UnixConnector.getCommandGenerator().removeSshKeyDir(username));
-		}
-	}
+    public static void appendDeletePublicKeyCommand(StringBuilder commandBuilder, String username,
+                                                    Set<Attribute> attrs) {
+        Attribute publiKey = AttributeUtil.find(SchemaAccountAttribute.PUBLIC_KEY.getName(), attrs);
+        if (publiKey != null) {
+            LOG.ok("Preparing command for deleting public key");
+            appendCommand(commandBuilder, UnixConnector.getCommandGenerator().removeSshKeyDir(username));
+        }
+    }
 
-	public static String buildLockoutCommand(UnixConnection unixConnection, String username,
-			Set<Attribute> attrs) throws JSchException, IOException {
-		Attribute status = AttributeUtil.find(OperationalAttributes.LOCK_OUT_NAME, attrs);
-		if (status != null && status.getValue() != null && !status.getValue().isEmpty()) {
-			boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
+    public static String buildLockoutCommand(UnixConnection unixConnection, String username,
+                                             Set<Attribute> attrs) throws JSchException, IOException {
+        Attribute status = AttributeUtil.find(OperationalAttributes.LOCK_OUT_NAME, attrs);
+        if (status != null && status.getValue() != null && !status.getValue().isEmpty()) {
+            boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
 //			UnixResult result;
-			if (!statusValue) {
-				return UnixConnector.getCommandGenerator().lockUser(username);
-				// result.checkResult(Operation.USERMOD);
-			} else {
-				return UnixConnector.getCommandGenerator().unlockUser(username);
+            if (!statusValue) {
+                return UnixConnector.getCommandGenerator().lockUser(username);
+                // result.checkResult(Operation.USERMOD);
+            } else {
+                return UnixConnector.getCommandGenerator().unlockUser(username);
 
-			}
-		}
-		return null;
-	}
+            }
+        }
+        return null;
+    }
 
-	public static String buildActivationCommand(UnixConnection unixConnection, String username,
-			Set<Attribute> attrs) throws JSchException, IOException {
-		Attribute status = AttributeUtil.find(OperationalAttributes.ENABLE_NAME, attrs);
-		if (!isEmpty(status)) {
-			boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
+    public static String buildActivationCommand(UnixConnection unixConnection, String username,
+                                                Set<Attribute> attrs) throws JSchException, IOException {
+        Attribute status = AttributeUtil.find(OperationalAttributes.ENABLE_NAME, attrs);
+        if (!isEmpty(status)) {
+            boolean statusValue = ((Boolean) status.getValue().get(0)).booleanValue();
 //			UnixResult result;
-			if (!statusValue) {
-				Attribute validTo = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, attrs);
-				String formatedDate = null;
-				if (!isEmpty(validTo)) {
-					formatedDate = formatDate((Long) validTo.getValue().get(0));
-				}
-				return UnixConnector.getCommandGenerator().disableUser(username, formatedDate);
-				// result.checkResult(Operation.USERMOD);
-			} else {
-				return UnixConnector.getCommandGenerator().enableUser(username);
+            if (!statusValue) {
+                Attribute validTo = AttributeUtil.find(OperationalAttributes.DISABLE_DATE_NAME, attrs);
+                String formatedDate = null;
+                if (!isEmpty(validTo)) {
+                    formatedDate = formatDate((Long) validTo.getValue().get(0));
+                }
+                return UnixConnector.getCommandGenerator().disableUser(username, formatedDate);
+                // result.checkResult(Operation.USERMOD);
+            } else {
+                return UnixConnector.getCommandGenerator().enableUser(username);
 
-			}
-		}
-		return null;
-	}
+            }
+        }
+        return null;
+    }
 
-	private static String formatDate(long milis) {
-		Date date = new Date(milis);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-DD");
-		return dateFormat.format(date);
-	}
+    private static String formatDate(long milis) {
+        Date date = new Date(milis);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-DD");
+        return dateFormat.format(date);
+    }
 
-	public static boolean isEmpty(Attribute attribute) {
-		if (attribute == null) {
-			return true;
-		}
+    public static boolean isEmpty(Attribute attribute) {
+        if (attribute == null) {
+            return true;
+        }
 
-		if (attribute.getValue() == null) {
-			return true;
-		}
+        if (attribute.getValue() == null) {
+            return true;
+        }
 
-		if (attribute.getValue().isEmpty()) {
-			return true;
-		}
+        if (attribute.getValue().isEmpty()) {
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 }

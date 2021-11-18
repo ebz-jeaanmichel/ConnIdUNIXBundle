@@ -27,10 +27,10 @@ import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 
 public class SharedTestMethods {
-	
-	protected static final String DEFAUL_SHELL = "/bin/bash";
-	
-	private static final Log LOG = Log.getLog(SharedTestMethods.class);
+
+    protected static final String DEFAUL_SHELL = "/bin/bash";
+
+    private static final Log LOG = Log.getLog(SharedTestMethods.class);
 
     protected final UnixConfiguration createConfiguration() {
         // create the connector configuration..
@@ -57,10 +57,10 @@ public class SharedTestMethods {
 //        config.setHomeDirectoryAttribute("homeDir");
         return config;
     }
-    
-    
-    protected final Set<Attribute> createPasswordChange(String password){
-    	GuardedString encPassword = null;
+
+
+    protected final Set<Attribute> createPasswordChange(String password) {
+        GuardedString encPassword = null;
         if (password != null) {
             encPassword = new GuardedString(password.toCharArray());
         }
@@ -71,7 +71,12 @@ public class SharedTestMethods {
     }
 
     protected final Set<Attribute> createSetOfAttributes(final Name name,
-            final String password, final boolean status) {
+                                                         final String password, final boolean status) {
+        if (name == null) {
+
+            throw new IllegalArgumentException("No Name attribute provided in the attributes");
+        }
+
         AttributesTestValue attrs = new AttributesTestValue();
         GuardedString encPassword = null;
         if (password != null) {
@@ -86,13 +91,13 @@ public class SharedTestMethods {
         attributes.add(AttributeBuilder.build("shell", CollectionUtil.newSet(
                 DEFAUL_SHELL)));
         attributes.add(AttributeBuilder.build("homeDir", CollectionUtil.newSet(
-                "/home/"+attrs.getUsername())));
+                "/home/" + attrs.getUsername())));
         attributes.add(name);
         return attributes;
     }
-    
-    public void printTestTitle(String testName){
-    	System.out.println("============"+ testName + "===========");
-    	LOG.info("============"+ testName + "===========");
+
+    public void printTestTitle(String testName) {
+        System.out.println("============" + testName + "===========");
+        LOG.info("============" + testName + "===========");
     }
 }

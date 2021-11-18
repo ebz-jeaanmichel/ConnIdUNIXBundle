@@ -286,7 +286,7 @@ public class CommandGenerator {
         commandToExecute.append("echo ").append("\"").append(publicKey).append("\"").append(" | ");
     	if (!unixConfiguration.isRoot()){
     		Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-        	commandToExecute.append(sudoCommand.sudo());
+        	commandToExecute.append(sudoCommand.sudo(false));
     	}
     	String filename = new StringBuilder("/home/").append(username).append("/.ssh/authorized_keys").toString();
     	Tee teeCommand = new Tee(unixConfiguration, filename);
@@ -303,7 +303,7 @@ public class CommandGenerator {
         commandToExecute.append("echo ").append("\"").append(username).append(" ").append(permissions).append("\"").append(" | ");
     	if (!unixConfiguration.isRoot()){
     		Sudo sudoCommand = new Sudo(unixConfiguration.getSudoPassword());
-        	commandToExecute.append(sudoCommand.sudo());
+        	commandToExecute.append(sudoCommand.sudo(false));
     	}
     	String filename = new StringBuilder("/etc/sudoers.d/").append(username).append(isUser ? "_user" : "_group").toString();
     	Tee teeCommand = new Tee(unixConfiguration, filename);

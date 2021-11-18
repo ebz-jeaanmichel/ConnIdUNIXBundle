@@ -59,200 +59,210 @@ import com.jcraft.jsch.JSchException;
 
 @ConnectorClass(configurationClass = UnixConfiguration.class, displayNameKey = "unix.connector.display")
 public class UnixConnector implements PoolableConnector, CreateOp, UpdateOp, DeleteOp, TestOp,
-		SearchOp<Operand>, AuthenticateOp, SchemaOp, ResolveUsernameOp, UpdateAttributeValuesOp {
+        SearchOp<Operand>, AuthenticateOp, SchemaOp, ResolveUsernameOp, UpdateAttributeValuesOp {
 
-	private static final Log LOG = Log.getLog(UnixConnector.class);
+    private static final Log LOG = Log.getLog(UnixConnector.class);
 
-	private UnixConfiguration unixConfiguration;
+    private UnixConfiguration unixConfiguration;
 
-	private UnixConnection unixConnection;
+    private UnixConnection unixConnection;
 
-	private static CommandGenerator commandGenerator = null;
+    private static CommandGenerator commandGenerator = null;
 
-	@Override
-	public final Configuration getConfiguration() {
-		return unixConfiguration;
-	}
+    @Override
+    public final Configuration getConfiguration() {
+        return unixConfiguration;
+    }
 
-	@Override
-	public final void init(final Configuration configuration) {
-		LOG.ok("Unix Connector initialization started");
-		unixConfiguration = (UnixConfiguration) configuration;
-		commandGenerator = new CommandGenerator(unixConfiguration);
-		try {
-			unixConnection = new UnixConnection(unixConfiguration);
-		} catch (IOException e) {
-			LOG.error("Error in connection process", e);
-			throw new ConnectorException("Error in connection process: " + e.getMessage(), e);
-		} catch (JSchException e) {
-			LOG.error("Error in connection process", e);
-			throw new ConnectorException("Error in connection process: " + e.getMessage());
-		}
-		
-		LOG.ok("Unix Connector initialization finished");
-		
-	}
+    @Override
+    public final void init(final Configuration configuration) {
+        LOG.ok("Unix Connector initialization started");
+        unixConfiguration = (UnixConfiguration) configuration;
+        commandGenerator = new CommandGenerator(unixConfiguration);
+        try {
+            unixConnection = new UnixConnection(unixConfiguration);
+        } catch (IOException e) {
+            LOG.error("Error in connection process", e);
+            throw new ConnectorException("Error in connection process: " + e.getMessage(), e);
+        } catch (JSchException e) {
+            LOG.error("Error in connection process", e);
+            throw new ConnectorException("Error in connection process: " + e.getMessage());
+        }
 
-	public static CommandGenerator getCommandGenerator() {
-		return commandGenerator;
-	}
+        LOG.ok("Unix Connector initialization finished");
 
-	@Override
-	public final void dispose() {
-	
-		if (unixConnection != null) {
-			unixConnection.disconnect();
-			unixConnection = null;
-		}
-		unixConfiguration = null;
-		commandGenerator = null;
-	}
+    }
 
-	@Override
-	public final void test() {
-		LOG.info("Remote connection test");
-		try {
-			new UnixTest(unixConnection).test();
-		} catch (IOException ex) {
-			LOG.error("Error in connection process", ex);
-		} catch (JSchException jse) {
-			LOG.error("Error in connection process", jse);
-		}
-	}
+    public static CommandGenerator getCommandGenerator() {
+        return commandGenerator;
+    }
 
-	@Override
-	public final Uid create(final ObjectClass oc, final Set<Attribute> set, final OperationOptions oo) {
-		LOG.info("Create OP");
-		Uid uidResult = null;
-		if (oc == null) {
-			throw new ConnectorException("Could not create object, no object class was specified.");
-		}
-		try {
-			uidResult = new UnixCreate(oc, unixConnection, set).create();
-		} catch (IOException ex) {
-			LOG.error("Error in connection process", ex);
-		} catch (JSchException ex) {
-			LOG.error("Error in connection process", ex);
-		}
-		return uidResult;
-	}
+    @Override
+    public final void dispose() {
 
-	@Override
-	public final void delete(final ObjectClass oc, final Uid uid, final OperationOptions oo) {
-		try {
-			new UnixDelete(oc, unixConnection, uid).delete();
-		} catch (IOException ex) {
-			LOG.error("Error in connection process", ex);
-		} catch (JSchException ex) {
-			LOG.error("Error in connection process", ex);
-		}
-	}
+        if (unixConnection != null) {
+            unixConnection.disconnect();
+            unixConnection = null;
+        }
+        unixConfiguration = null;
+        commandGenerator = null;
+    }
 
-	@Override
-	public final Uid authenticate(final ObjectClass oc, final String username, final GuardedString gs,
-			final OperationOptions oo) {
-		Uid uidResult = null;
-		try {
-			LOG.info("Authenticate user: " + username);
-			uidResult = new UnixAuthenticate(oc, unixConnection, username, gs).authenticate();
-		} catch (IOException ex) {
-			LOG.error("Error in connection process", ex);
-		} catch (JSchException ex) {
-			LOG.error("Error in connection process", ex);
-		}
-		return uidResult;
-	}
+    @Override
+    public final void test() {
+        LOG.info("Remote connection test");
+        try {
+            new UnixTest(unixConnection).test();
+        } catch (IOException ex) {
+            LOG.error("Error in connection process", ex);
+        } catch (JSchException jse) {
+            LOG.error("Error in connection process", jse);
+        }
+    }
 
-	@Override
-	public final Uid update(final ObjectClass oc, final Uid uid, final Set<Attribute> set,
-			final OperationOptions oo) {
-		try {
-			return new UnixUpdate(oc, unixConnection, uid, set).update();
-		} catch (IOException ex) {
-			LOG.error("Error in connection process", ex);
-		} catch (JSchException ex) {
-			LOG.error("Error in connection process", ex);
-		}
-		return uid;
-	}
+    @Override
+    public final Uid create(final ObjectClass oc, final Set<Attribute> set, final OperationOptions oo) {
+        LOG.info("Create OP");
+        Uid uidResult = null;
+        if (oc == null) {
+            throw new ConnectorException("Could not create object, no object class was specified.");
+        }
+        try {
+            uidResult = new UnixCreate(oc, unixConnection, set).create();
+        } catch (IOException ex) {
+            LOG.error("Error in connection process", ex);
+        } catch (JSchException ex) {
+            LOG.error("Error in connection process", ex);
+        }
+        return uidResult;
+    }
 
-	@Override
-	public final void executeQuery(final ObjectClass oc, final Operand filter, final ResultsHandler rh,
-			final OperationOptions oo) {
-		LOG.info("Execute query");
-		try {
-			new UnixExecuteQuery(unixConnection, oc, filter, oo, rh).executeQuery();
-		} catch (IOException ex) {
-			LOG.error("Error in connection process", ex);
-		} catch (JSchException ex) {
-			LOG.error("Error in connection process", ex);
-		}
-	}
+    @Override
+    public final void delete(final ObjectClass oc, final Uid uid, final OperationOptions oo) {
+        try {
+            new UnixDelete(oc, unixConnection, uid).delete();
+        } catch (IOException ex) {
+            LOG.error("Error in connection process", ex);
+        } catch (JSchException ex) {
+            LOG.error("Error in connection process", ex);
+        }
+    }
 
-	@Override
-	public final FilterTranslator<Operand> createFilterTranslator(final ObjectClass oc,
-			final OperationOptions oo) {
-		if (oc == null || (!oc.equals(ObjectClass.ACCOUNT)) && (!oc.equals(ObjectClass.GROUP))) {
-			throw new IllegalArgumentException("Invalid objectclass");
-		}
-		return new UnixFilterTranslator();
-	}
+    @Override
+    public final Uid authenticate(final ObjectClass oc, final String username, final GuardedString gs,
+                                  final OperationOptions oo) {
+        Uid uidResult = null;
+        try {
+            LOG.info("Authenticate user: " + username);
+            uidResult = new UnixAuthenticate(oc, unixConnection, username, gs).authenticate();
+        } catch (IOException ex) {
+            LOG.error("Error in connection process", ex);
+        } catch (JSchException ex) {
+            LOG.error("Error in connection process", ex);
+        }
+        return uidResult;
+    }
 
-	@Override
-	public Schema schema() {
-		return new UnixSchema().buildSchema();
-	}
+    @Override
+    public final Uid update(final ObjectClass oc, final Uid uid, final Set<Attribute> set,
+                            final OperationOptions oo) {
+        try {
+            if (set == null) {
+                throw new IllegalArgumentException("Attribute set is null");
+            }
 
-	@Override
-	public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
+            return new UnixUpdate(oc, unixConnection, uid, set).update();
+        } catch (IOException ex) {
+            LOG.error("Error in connection process", ex);
+        } catch (JSchException ex) {
+            LOG.error("Error in connection process", ex);
+        }
+        return uid;
+    }
 
-		final List<Uid> uids = new ArrayList<Uid>();
-		executeQuery(objectClass, new Operand(Operator.EQ, Name.NAME, username, false), new ResultsHandler() {
+    @Override
+    public final void executeQuery(final ObjectClass oc, final Operand filter, final ResultsHandler rh,
+                                   final OperationOptions oo) {
 
-			@Override
-			public boolean handle(ConnectorObject obj) {
-				return uids.add(obj.getUid());
-			}
-		}, null);
+        if(oc==null || rh == null){
 
-		if (uids.isEmpty()) {
-			throw new IllegalStateException("Could not resolve username. No user with given username: "
-					+ username + " found");
-		}
+            throw new IllegalArgumentException();
+        }
 
-		if (uids.size() > 1) {
-			throw new IllegalArgumentException("Foud more than one user with username: " + username);
-		}
+        LOG.info("Execute query");
+        try {
+            new UnixExecuteQuery(unixConnection, oc, filter, oo, rh).executeQuery();
+        } catch (IOException ex) {
+            LOG.error("Error in connection process", ex);
+        } catch (JSchException ex) {
+            LOG.error("Error in connection process", ex);
+        }
+    }
 
-		return uids.get(0);
-	}
+    @Override
+    public final FilterTranslator<Operand> createFilterTranslator(final ObjectClass oc,
+                                                                  final OperationOptions oo) {
+        if (oc == null || (!oc.equals(ObjectClass.ACCOUNT)) && (!oc.equals(ObjectClass.GROUP))) {
+            throw new IllegalArgumentException("Invalid objectclass");
+        }
+        return new UnixFilterTranslator();
+    }
 
-	@Override
-	public Uid addAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToAdd,
-			OperationOptions options) {
-		return update(objclass, uid, valuesToAdd, options);
-	}
+    @Override
+    public Schema schema() {
+        return new UnixSchema().buildSchema();
+    }
 
-	@Override
-	public Uid removeAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToRemove,
-			OperationOptions options) {
-		try {
-			new UnixUpdate(objclass, unixConnection, uid, valuesToRemove).removeAttributes();
-		} catch (IOException ex) {
-			LOG.error("Error in connection process", ex);
-		} catch (JSchException ex) {
-			LOG.error("Error in connection process", ex);
-		}
-		return uid;
-	}
+    @Override
+    public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
 
-	@Override
-	public void checkAlive() {
-		
-		if (!unixConnection.checkAlive(unixConfiguration)){
-			throw new ConnectorException("Connection check failed");
-		}
-		LOG.ok("Connetion is OK (checkAlive)");
+        final List<Uid> uids = new ArrayList<Uid>();
+        executeQuery(objectClass, new Operand(Operator.EQ, Name.NAME, username, false), new ResultsHandler() {
 
-	}
+            @Override
+            public boolean handle(ConnectorObject obj) {
+                return uids.add(obj.getUid());
+            }
+        }, null);
+
+        if (uids.isEmpty()) {
+            throw new IllegalStateException("Could not resolve username. No user with given username: "
+                    + username + " found");
+        }
+
+        if (uids.size() > 1) {
+            throw new IllegalArgumentException("Foud more than one user with username: " + username);
+        }
+
+        return uids.get(0);
+    }
+
+    @Override
+    public Uid addAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToAdd,
+                                  OperationOptions options) {
+        return update(objclass, uid, valuesToAdd, options);
+    }
+
+    @Override
+    public Uid removeAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToRemove,
+                                     OperationOptions options) {
+        try {
+            new UnixUpdate(objclass, unixConnection, uid, valuesToRemove).removeAttributes();
+        } catch (IOException ex) {
+            LOG.error("Error in connection process", ex);
+        } catch (JSchException ex) {
+            LOG.error("Error in connection process", ex);
+        }
+        return uid;
+    }
+
+    @Override
+    public void checkAlive() {
+
+        if (!unixConnection.checkAlive(unixConfiguration)) {
+            throw new ConnectorException("Connection check failed");
+        }
+        LOG.ok("Connetion is OK (checkAlive)");
+
+    }
 }

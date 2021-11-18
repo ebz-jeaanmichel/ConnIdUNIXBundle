@@ -146,7 +146,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
                 ACTIVE_USER), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithWrongObjectClass() {
     	printTestTitle("updateWithWrongObjectClass");
     	newAccount = connector.create(ObjectClass.ACCOUNT,
@@ -157,7 +157,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
                 ACTIVE_USER), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithNullObjectClass() {
     	printTestTitle("updateWithNullObjectClass");
         connector.update(null, newAccount,
@@ -165,7 +165,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
                 ACTIVE_USER), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithNullUid() {
     	printTestTitle("updateWithNullUid");
         connector.update(ObjectClass.ACCOUNT, null,
@@ -173,7 +173,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
                 ACTIVE_USER), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithNullSet() {
     	printTestTitle("updateWithNullSet");
         newAccount = connector.create(ObjectClass.ACCOUNT,
@@ -192,7 +192,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
                 createSetOfAttributes(name, null, true), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithNullUsername() {
     	printTestTitle("updateWithNullUsername");
         newAccount = connector.create(ObjectClass.ACCOUNT,
@@ -203,7 +203,7 @@ public class UnixUpdateUserTest extends SharedTestMethods {
                 ACTIVE_USER), null);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void updateWithAllNull() {
     	printTestTitle("updateWithAllNull");
         connector.update(null, null, null, null);
