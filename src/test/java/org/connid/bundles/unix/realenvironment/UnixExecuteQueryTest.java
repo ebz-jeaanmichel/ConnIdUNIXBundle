@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2011 ConnId (connid-dev@googlegroups.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,7 +83,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
         printTestTitle(TEST_CLASS + "searchUserDisabled()");
 
         final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
-//        connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(new Name("a.nikolic"), attrs.getPassword(), false), null);
+        newAccount = connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(new Name("a.nikolic"), attrs.getPassword(), false), null);
         connector.executeQuery(ObjectClass.ACCOUNT,
                 new Operand(
                         Operator.EQ, Uid.NAME, "a.nikolic", false),
@@ -98,7 +98,7 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
         for (ConnectorObject connObj : actual) {
             assertEquals(false, connObj.getAttributeByName(OperationalAttributes.ENABLE_NAME).getValue().get(0));
         }
-//        connector.delete(ObjectClass.ACCOUNT, newAccount, null);
+        connector.delete(ObjectClass.ACCOUNT, newAccount, null);
     }
 
 

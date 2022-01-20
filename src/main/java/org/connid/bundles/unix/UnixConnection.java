@@ -124,7 +124,7 @@ public class UnixConnection {
 		fromServer = execChannel.getInputStream();
 		errorStream = execChannel.getErrStream();
 		execChannel.setPty(unixConfiguration.isUsePty());
-		LOG.ok("Exec channel openned");
+		LOG.ok("Exec channel opened");
 		return execChannel;
 	}
 

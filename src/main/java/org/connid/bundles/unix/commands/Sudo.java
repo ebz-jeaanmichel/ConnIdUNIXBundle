@@ -1,12 +1,12 @@
 /**
  * Copyright (C) 2011 ConnId (connid-dev@googlegroups.com)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *         http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,6 @@ public class Sudo {
      * authenticated, a timestamp is updated and the user may then use sudo
      * without a password for a short period of time (5 minutes unless
      * overridden in sudoers).
-     *
      */
     private static final String SUDO_COMMAND = "sudo ";
     /**
@@ -43,7 +42,7 @@ public class Sudo {
      * run a password will be required. This option does not require a password
      * and was added to allow a user to revoke sudo permissions from a .logout
      * file.
-     *
+     * <p>
      * When used in conjunction with a command or an option that may require a
      * password, the -k option will cause sudo to ignore the user’s timestamp
      * file. As a result, sudo will prompt for a password (if one is required by
@@ -55,7 +54,6 @@ public class Sudo {
      * prompting for the user’s password if necessary. This extends the sudo
      * timeout for another 5 minutes (or whatever the timeout is set to in
      * sudoers) but does not run a command.
-     *
      */
     private static final String VALIDATE_OPTION = "-v";
     /**
@@ -72,7 +70,7 @@ public class Sudo {
 //    	return SUDO_COMMAND;
 
         return SUDO_COMMAND + " " + INVALIDATE_TIMESTAMP_OPTION + "; echo "
-                + sudoPassword + " | " + SUDO_COMMAND + " " + VALIDATE_OPTION
+                + "'" + sudoPassword + "'" + " | " + SUDO_COMMAND + " " + VALIDATE_OPTION
                 + " " + READ_PASSWORD_FROM_STDIN_OPTION + "; " + SUDO_COMMAND;
     }
 
