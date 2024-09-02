@@ -3,7 +3,7 @@ UNIX Connector
 
 This UNIX Connector is a fork of the [ConnId](https://github.com/Evolveum/ConnIdUNIXBundle) project.
 
-It's using the latest version o Jsch library, and build using Evolveum Polygon archetype.
+It's using the latest version o JSch library, and build using Evolveum Polygon archetype.
 
 ## Dependencies
 
@@ -13,7 +13,7 @@ It's using the latest version o Jsch library, and build using Evolveum Polygon a
 
 ### Maven
 
-* download UNIX connector source code from github
+* download UNIX connector source code from Github
 * build connector with maven:
 ```
 mvn clean install -DskipTests=true
