@@ -29,8 +29,6 @@
     
     <includeBaseDirectory>false</includeBaseDirectory>
 
-    <includeBaseDirectory>false</includeBaseDirectory>
-
     <fileSets>
         <fileSet>
             <directory>target/classes</directory>
