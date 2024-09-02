@@ -20,9 +20,9 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 public class General {
 
     public static String getentPasswdFile(OperationOptions options) {
-    	StringBuilder getentCommand = new StringBuilder("getent passwd");
- 
-    	appendPaging(options, getentCommand);
+        StringBuilder getentCommand = new StringBuilder("getent passwd");
+
+        appendPaging(options, getentCommand);
         return getentCommand.toString();
     }
     
