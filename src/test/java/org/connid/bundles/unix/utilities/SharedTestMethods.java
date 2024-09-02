@@ -49,9 +49,9 @@ public class SharedTestMethods {
         config.setPtyType(UnixProperties.UNIX_PTY_TYPE);
         config.setSudoPassword(new GuardedString(UnixProperties.UNIX_PASSWORD.toCharArray()));
         config.setSshConnectionTimeout(5000);
-        config.setReadTimeout(30000);
+        config.setReadTimeout(3000);
         config.setTimeToWait(1000);
-        config.setShell("$");
+        config.setSudoPassword(new GuardedString(UnixProperties.UNIX_PASSWORD.toCharArray()));
 //        config.setCommentAttribute("comment");
 //        config.setShellAttribute("shell");
 //        config.setHomeDirectoryAttribute("homeDir");

@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.connid.bundles.unix.realenvironment;
+package org.connid.bundles.unix;
 
-import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.utilities.AttributesTestValue;
 import org.connid.bundles.unix.utilities.SharedTestMethods;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;

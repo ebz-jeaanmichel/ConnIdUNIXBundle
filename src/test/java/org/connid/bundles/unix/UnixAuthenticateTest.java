@@ -13,22 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.connid.bundles.unix.realenvironment;
+package org.connid.bundles.unix;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import org.connid.bundles.unix.UnixConnector;
-import org.connid.bundles.unix.search.Operand;
-import org.connid.bundles.unix.search.Operator;
 import org.connid.bundles.unix.utilities.AttributesTestValue;
 import org.connid.bundles.unix.utilities.SharedTestMethods;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
-import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;

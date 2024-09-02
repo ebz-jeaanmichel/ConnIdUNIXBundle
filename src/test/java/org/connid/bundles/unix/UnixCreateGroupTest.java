@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.connid.bundles.unix.realenvironment;
+package org.connid.bundles.unix;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.connid.bundles.unix.UnixConnector;
-import org.connid.bundles.unix.schema.SchemaAccountAttribute;
 import org.connid.bundles.unix.schema.SchemaGroupAttribute;
 import org.connid.bundles.unix.search.Operand;
 import org.connid.bundles.unix.search.Operator;

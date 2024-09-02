@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.connid.bundles.unix.realenvironment;
+package org.connid.bundles.unix;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.search.Operand;
 import org.connid.bundles.unix.search.Operator;
 import org.connid.bundles.unix.utilities.AttributesTestValue;
 import org.connid.bundles.unix.utilities.SharedTestMethods;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.*;
+import org.junit.Ignore;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 public class UnixExecuteQueryTest extends SharedTestMethods {
@@ -275,6 +274,21 @@ public class UnixExecuteQueryTest extends SharedTestMethods {
     public void executeQueryTestWithAllNull() {
         printTestTitle(TEST_CLASS + "executeQueryTestWithAllNull()");
         connector.executeQuery(null, null, null, null);
+    }
+
+    @Test
+    public void executeForAllAccounts() {
+        printTestTitle(TEST_CLASS + "executeForAllAccounts()");
+        final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
+        connector.executeQuery(ObjectClass.ACCOUNT, null,
+                new ResultsHandler() {
+
+                    @Override
+                    public boolean handle(final ConnectorObject connObj) {
+                        actual.add(connObj);
+                        return true;
+                    }
+                }, null);
     }
 
     @AfterTest
