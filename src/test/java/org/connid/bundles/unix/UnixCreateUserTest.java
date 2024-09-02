@@ -15,9 +15,6 @@
  */
 package org.connid.bundles.unix.realenvironment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,9 +32,10 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 public class UnixCreateUserTest extends SharedTestMethods {
 
@@ -49,7 +47,7 @@ public class UnixCreateUserTest extends SharedTestMethods {
 
 	private AttributesTestValue attrs = null;
 
-	@Before
+	@BeforeTest
 	public final void initTest() {
 		attrs = new AttributesTestValue();
 		connector = new UnixConnector();
@@ -63,13 +61,13 @@ public class UnixCreateUserTest extends SharedTestMethods {
 		boolean userExists = false;
 		newAccount = connector
 				.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
-		assertEquals(name.getNameValue(), newAccount.getUidValue());
+		Assert.assertEquals(name.getNameValue(), newAccount.getUidValue());
 		try {
 			connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
 		} catch (Exception e) {
 			userExists = true;
 		}
-		assertTrue(userExists);
+		Assert.assertTrue(userExists);
 	}
 
 	@Test
@@ -80,11 +78,11 @@ public class UnixCreateUserTest extends SharedTestMethods {
 
 		attributes.add(AttributeBuilder.build(SchemaAccountAttribute.PUBLIC_KEY.getName(), publicKey.toString()));
 		newAccount = connector.create(ObjectClass.ACCOUNT, attributes, null);
-		assertEquals(name.getNameValue(), newAccount.getUidValue());
+		Assert.assertEquals(name.getNameValue(), newAccount.getUidValue());
 
 	}
 
-	@Test(expected = ConnectorException.class)
+	@Test(expectedExceptions = ConnectorException.class)
 	public final void createLockedUser() {
 		printTestTitle("createLockedUser");
 		newAccount = connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), false),
@@ -97,7 +95,7 @@ public class UnixCreateUserTest extends SharedTestMethods {
 		printTestTitle("createUnLockedUser");
 		newAccount = connector
 				.create(ObjectClass.ACCOUNT, createSetOfAttributes(name, attrs.getPassword(), true), null);
-		assertEquals(name.getNameValue(), newAccount.getUidValue());
+		Assert.assertEquals(name.getNameValue(), newAccount.getUidValue());
 		final Set<ConnectorObject> actual = new HashSet<ConnectorObject>();
 		
 		System.out.println("first read");
@@ -111,7 +109,7 @@ public class UnixCreateUserTest extends SharedTestMethods {
 					}
 				}, null);
 		for (ConnectorObject connObj : actual) {
-			assertEquals(name.getNameValue(), connObj.getName().getNameValue());
+			Assert.assertEquals(name.getNameValue(), connObj.getName().getNameValue());
 		}
 		connector.authenticate(ObjectClass.ACCOUNT, newAccount.getUidValue(), attrs.getGuardedPassword(), null);
 	}
@@ -125,37 +123,37 @@ public class UnixCreateUserTest extends SharedTestMethods {
 		}
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expectedExceptions = IllegalArgumentException.class)
 	public void createWithWrongObjectClass() {
 		printTestTitle("createWithWrongObjectClass");
 		connector.create(attrs.getWrongObjectClass(), createSetOfAttributes(name, attrs.getPassword(), true), null);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expectedExceptions = IllegalArgumentException.class)
 	public void createTestWithNull() {
 		printTestTitle("createTestWithNull");
 		connector.create(attrs.getWrongObjectClass(), null, null);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expectedExceptions = IllegalArgumentException.class)
 	public void createTestWithNameNull() {
 		printTestTitle("createTestWithNameNull");
 		connector.create(ObjectClass.ACCOUNT, createSetOfAttributes(null, attrs.getPassword(), true), null);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expectedExceptions = IllegalArgumentException.class)
 	public void createTestWithPasswordNull() {
 		printTestTitle("createTestWithPasswordNull");
 		connector.create(attrs.getWrongObjectClass(), createSetOfAttributes(name, null, true), null);
 	}
 
-	@Test(expected = ConnectorException.class)
+	@Test(expectedExceptions = ConnectorException.class)
 	public void createTestWithAllNull() {
 		printTestTitle("createTestWithAllNull");
 		connector.create(null, null, null);
 	}
 
-	@After
+	@AfterTest
 	public final void close() {
 		sleep(5000);
 		if (newAccount != null) {

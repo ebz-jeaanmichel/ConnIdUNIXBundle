@@ -19,7 +19,7 @@ import org.connid.bundles.unix.UnixConfiguration;
 import org.connid.bundles.unix.UnixConnector;
 import org.connid.bundles.unix.utilities.SharedTestMethods;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 public class UnixTest extends SharedTestMethods {
 
@@ -31,7 +31,7 @@ public class UnixTest extends SharedTestMethods {
         connector.dispose();
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public final void testWrongConnection() {
         final UnixConnector connector = new UnixConnector();
         UnixConfiguration unixConfiguration = createConfiguration();

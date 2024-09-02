@@ -22,18 +22,19 @@ import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
-public class UnixDeleteUserTest extends SharedTestMethods {
+public class UnixDeleteGroupTest extends SharedTestMethods {
 
     private UnixConnector connector = null;
     private Name name = null;
     private Uid newAccount = null;
     private AttributesTestValue attrs = null;
 
-    @Before
+    @BeforeTest
     public final void initTest() {
         attrs = new AttributesTestValue();
         connector = new UnixConnector();
@@ -41,29 +42,18 @@ public class UnixDeleteUserTest extends SharedTestMethods {
         name = new Name(attrs.getUsername());
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test(expectedExceptions = ConnectorException.class)
     public final void deleteNotExistsUser() {
-        connector.delete(ObjectClass.ACCOUNT,
-                new Uid(attrs.getWrongUsername()), null);
+        connector.delete(ObjectClass.GROUP,
+                new Uid(attrs.getWrongGroupName()), null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public final void deleteNullUser() {
-        connector.delete(ObjectClass.ACCOUNT, null, null);
-    }
-    
-    @Test(expected = IllegalArgumentException.class)
-    public final void deleteNull() {
-        connector.delete(null, null, null);
+        connector.delete(ObjectClass.GROUP, null, null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public final void deleteWithWrongObjectClass() {
-        connector.delete(attrs.getWrongObjectClass(),
-                newAccount, null);
-    }
-
-    @After
+    @AfterTest
     public final void close() {
         connector.dispose();
     }
